@@ -1,0 +1,98 @@
+{% extends 'agendamentos/base.html' %}
+
+{% block title %}Cadastrar Pet{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-custom text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-paw me-2"></i>
+                        {% if pet %}Editar{% else %}Cadastrar{% endif %} Pet
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nome.id_for_label }}" class="form-label">Nome do Pet *</label>
+                                {{ form.nome }}
+                                {% if form.nome.errors %}
+                                    <div class="text-danger small">{{ form.nome.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo *</label>
+                                {{ form.tipo }}
+                                {% if form.tipo.errors %}
+                                    <div class="text-danger small">{{ form.tipo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.raca.id_for_label }}" class="form-label">Raça</label>
+                                {{ form.raca }}
+                                {% if form.raca.errors %}
+                                    <div class="text-danger small">{{ form.raca.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.idade.id_for_label }}" class="form-label">Idade (anos)</label>
+                                {{ form.idade }}
+                                {% if form.idade.errors %}
+                                    <div class="text-danger small">{{ form.idade.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.observacao.id_for_label }}" class="form-label">Observações</label>
+                            {{ form.observacao }}
+                            {% if form.observacao.errors %}
+                                <div class="text-danger small">{{ form.observacao.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'meus_pets' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar
+                            </a>
+                            <button type="submit" class="btn btn-custom">
+                                <i class="fas fa-save me-1"></i>
+                                {% if pet %}Atualizar{% else %}Cadastrar{% endif %} Pet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-custom {
+        background-color: #9E7B8A !important;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #333;
+    }
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        padding: 12px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #9E7B8A;
+        box-shadow: 0 0 0 0.2rem rgba(158, 123, 138, 0.25);
+    }
+</style>
+{% endblock %}

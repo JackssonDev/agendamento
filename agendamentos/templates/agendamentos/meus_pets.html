@@ -1,0 +1,73 @@
+{% extends 'agendamentos/base.html' %}
+
+{% block title %}Meus Pets{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-paw me-2"></i>Meus Pets</h2>
+        <a href="{% url 'cadastrar_pet' %}" class="btn btn-custom">
+            <i class="fas fa-plus me-1"></i>Novo Pet
+        </a>
+    </div>
+
+    {% if pets %}
+    <div class="row">
+        {% for pet in pets %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-custom text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-paw me-1"></i>{{ pet.nome }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Tipo:</strong> {{ pet.get_tipo_display }}<br>
+                        <strong>Raça:</strong> {{ pet.raca|default:"Não informada" }}<br>
+                        <strong>Idade:</strong> {{ pet.idade|default:"Não informada" }} anos<br>
+                        {% if pet.observacao %}
+                        <strong>Observações:</strong><br>
+                        <small>{{ pet.observacao }}</small>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'editar_pet' pet.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'excluir_pet' pet.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Excluir
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-paw fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Você ainda não tem pets cadastrados</h4>
+        <p class="text-muted">Cadastre seu primeiro pet para começar a agendar serviços!</p>
+        <a href="{% url 'cadastrar_pet' %}" class="btn btn-custom mt-2">
+            <i class="fas fa-plus me-1"></i>Cadastrar Primeiro Pet
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .bg-custom {
+        background-color: #9E7B8A !important;
+    }
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'agendamentos/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card p-4 shadow-lg" style="width: 100%; max-width: 400px; border-radius: 15px;">
+        <h2 class="text-center mb-4" style="color: #9E7B8A;">Login</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label visually-hidden">{{ field.label }}</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light" style="border-radius: 20px 0 0 20px;">
+                        {% if field.name == 'username' %}
+                            <i class="fas fa-user text-muted"></i>
+                        {% else %}
+                            <i class="fas fa-lock text-muted"></i>
+                        {% endif %}
+                    </span>
+                    {{ field|add_class:"form-control" }}
+                    {% if field.name == 'password' %}
+                    <button class="btn btn-outline-secondary bg-light" type="button" id="togglePassword" style="border-radius: 0 20px 20px 0;">
+                        <i class="fas fa-eye text-muted"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                
+                {% for error in field.errors %}
+                    <div class="alert alert-danger mt-1 p-2 small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-custom btn-lg">Entrar</button>
+            </div>
+            <p class="text-center mt-3 small">
+                Não tem uma conta? <a href="{% url 'cadastro' %}" style="color: #9E7B8A; text-decoration: none;">Cadastrar-se</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Script para alternar visibilidade da senha
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('id_password');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function (e) {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+    });
+</script>
+{% endblock %}

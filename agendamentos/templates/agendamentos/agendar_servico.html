@@ -1,0 +1,361 @@
+{% extends 'agendamentos/base.html' %}
+
+{% block title %}Agendar Serviço{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-custom text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>Agendar Serviço
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="agendamentoForm">
+                        {% csrf_token %}
+                        
+                        <!-- Serviços (Checkboxes) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Serviços *</label>
+                            <div class="row">
+                                {% for checkbox in form.servicos %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                            {{ checkbox.choice_label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.servicos.errors %}
+                                <div class="text-danger small">{{ form.servicos.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Valor Total -->
+                        <div class="mb-4 p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-0">Valor Total: <span id="valor-total">R$ 0,00</span></h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dados do Pet -->
+                        <h5 class="mt-4 mb-3 border-bottom pb-2">Dados do Pet</h5>
+                        
+                        {% if user.is_authenticated %}
+                        <div class="mb-3">
+                            <label for="{{ form.pet.id_for_label }}" class="form-label">Selecione seu Pet</label>
+                            {{ form.pet }}
+                            {% if form.pet.errors %}
+                                <div class="text-danger small">{{ form.pet.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Ou <a href="{% url 'cadastrar_pet' %}">cadastre um novo pet</a></small>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nome_tutor.id_for_label }}" class="form-label">Nome do Tutor *</label>
+                                {{ form.nome_tutor }}
+                                {% if form.nome_tutor.errors %}
+                                    <div class="text-danger small">{{ form.nome_tutor.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nome_pet.id_for_label }}" class="form-label">Nome do Pet *</label>
+                                {{ form.nome_pet }}
+                                {% if form.nome_pet.errors %}
+                                    <div class="text-danger small">{{ form.nome_pet.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo_pet.id_for_label }}" class="form-label">Tipo do Pet *</label>
+                                {{ form.tipo_pet }}
+                                {% if form.tipo_pet.errors %}
+                                    <div class="text-danger small">{{ form.tipo_pet.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Data e Horário -->
+                        <h5 class="mt-4 mb-3 border-bottom pb-2">Data e Horário</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.data.id_for_label }}" class="form-label">Data *</label>
+                                {{ form.data }}
+                                {% if form.data.errors %}
+                                    <div class="text-danger small">{{ form.data.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.horario.id_for_label }}" class="form-label">Horário *</label>
+                                {{ form.horario }}
+                                {% if form.horario.errors %}
+                                    <div class="text-danger small">{{ form.horario.errors }}</div>
+                                {% endif %}
+                                <div id="horarios-disponiveis" class="mt-2 small text-muted"></div>
+                            </div>
+                        </div>
+
+                        <!-- Endereço -->
+                        <h5 class="mt-4 mb-3 border-bottom pb-2">Endereço</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.cep.id_for_label }}" class="form-label">CEP *</label>
+                                <div class="input-group">
+                                    {{ form.cep }}
+                                    <button type="button" class="btn btn-outline-custom" id="btn-cep">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                {% if form.cep.errors %}
+                                    <div class="text-danger small">{{ form.cep.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.rua.id_for_label }}" class="form-label">Rua *</label>
+                                {{ form.rua }}
+                                {% if form.rua.errors %}
+                                    <div class="text-danger small">{{ form.rua.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.numero.id_for_label }}" class="form-label">Número *</label>
+                                {{ form.numero }}
+                                {% if form.numero.errors %}
+                                    <div class="text-danger small">{{ form.numero.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-5 mb-3">
+                                <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro *</label>
+                                {{ form.bairro }}
+                                {% if form.bairro.errors %}
+                                    <div class="text-danger small">{{ form.bairro.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.cidade.id_for_label }}" class="form-label">Cidade *</label>
+                                {{ form.cidade }}
+                                {% if form.cidade.errors %}
+                                    <div class="text-danger small">{{ form.cidade.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-2 mb-3">
+                                <label for="{{ form.estado.id_for_label }}" class="form-label">UF *</label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                    <div class="text-danger small">{{ form.estado.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-10 mb-3">
+                                <label for="{{ form.complemento.id_for_label }}" class="form-label">Complemento</label>
+                                {{ form.complemento }}
+                                {% if form.complemento.errors %}
+                                    <div class="text-danger small">{{ form.complemento.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Forma de Pagamento -->
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="{{ form.forma_pagamento.id_for_label }}" class="form-label">Forma de Pagamento *</label>
+                                {{ form.forma_pagamento }}
+                                {% if form.forma_pagamento.errors %}
+                                    <div class="text-danger small">{{ form.forma_pagamento.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="mb-4">
+                            <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
+                            {{ form.observacoes }}
+                            {% if form.observacoes.errors %}
+                                <div class="text-danger small">{{ form.observacoes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-custom btn-lg">
+                                <i class="fas fa-calendar-check me-2"></i>Confirmar Agendamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cálculo do valor total
+    function calcularValorTotal() {
+        let total = 0;
+        document.querySelectorAll('input[name="servicos"]:checked').forEach(checkbox => {
+            const label = document.querySelector('label[for="' + checkbox.id + '"]');
+            if (label) {
+                const texto = label.textContent;
+                const precoMatch = texto.match(/R\$\s*([\d,]+\.?\d*)/);
+                if (precoMatch) {
+                    const preco = parseFloat(precoMatch[1].replace(',', '.'));
+                    if (!isNaN(preco)) {
+                        total += preco;
+                    }
+                }
+            }
+        });
+        document.getElementById('valor-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+    
+    // Event listener para checkboxes de serviços
+    document.querySelectorAll('input[name="servicos"]').forEach(checkbox => {
+        checkbox.addEventListener('change', calcularValorTotal);
+    });
+    
+    // Consulta de CEP
+    document.getElementById('btn-cep').addEventListener('click', function() {
+        const cepInput = document.getElementById('{{ form.cep.id_for_label }}');
+        const cep = cepInput.value.replace(/\D/g, '');
+        
+        if (cep.length !== 8) {
+            alert('CEP deve ter 8 dígitos');
+            return;
+        }
+        
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        this.disabled = true;
+        
+        fetch(`/consultar-cep/?cep=${cep}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na resposta da API');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    alert('Erro: ' + data.error);
+                } else {
+                    document.getElementById('{{ form.rua.id_for_label }}').value = data.rua || '';
+                    document.getElementById('{{ form.bairro.id_for_label }}').value = data.bairro || '';
+                    document.getElementById('{{ form.cidade.id_for_label }}').value = data.cidade || '';
+                    document.getElementById('{{ form.estado.id_for_label }}').value = data.estado || '';
+                    document.getElementById('{{ form.numero.id_for_label }}').focus();
+                }
+            })
+            .catch(error => {
+                alert('Erro ao consultar CEP: ' + error.message);
+                console.error('Erro:', error);
+            })
+            .finally(() => {
+                this.innerHTML = '<i class="fas fa-search"></i>';
+                this.disabled = false;
+            });
+    });
+    
+    // Auto-consulta de CEP ao digitar 8 dígitos
+    document.getElementById('{{ form.cep.id_for_label }}').addEventListener('input', function(e) {
+        const cep = this.value.replace(/\D/g, '');
+        if (cep.length === 8) {
+            document.getElementById('btn-cep').click();
+        }
+    });
+
+    // Preencher automaticamente dados do pet quando selecionado
+    const petSelect = document.getElementById('{{ form.pet.id_for_label }}');
+    const nomePetInput = document.getElementById('{{ form.nome_pet.id_for_label }}');
+    const tipoPetSelect = document.getElementById('{{ form.tipo_pet.id_for_label }}');
+
+    if (petSelect && nomePetInput && tipoPetSelect) {
+        petSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value && selectedOption.value !== '') {
+                const petNome = selectedOption.text.split(' (')[0];
+                const petTipo = selectedOption.getAttribute('data-tipo');
+                
+                nomePetInput.value = petNome;
+                if (petTipo) {
+                    tipoPetSelect.value = petTipo;
+                }
+            }
+        });
+        
+        // Adicionar data-tipo às opções de pet
+        {% if user.is_authenticated %}
+            const pets = {{ pets_json|safe }};
+            const options = petSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value && options[i].value !== '') {
+                    const petId = options[i].value;
+                    const pet = pets.find(p => p.id == petId);
+                    if (pet) {
+                        options[i].setAttribute('data-tipo', pet.tipo);
+                    }
+                }
+            }
+        {% endif %}
+    }
+});
+</script>
+
+<style>
+.bg-custom {
+    background-color: #9E7B8A !important;
+}
+.form-label {
+    font-weight: 500;
+    color: #333;
+}
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 12px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #9E7B8A;
+    box-shadow: 0 0 0 0.2rem rgba(158, 123, 138, 0.25);
+}
+.btn-outline-custom {
+    color: #9E7B8A;
+    border-color: #9E7B8A;
+}
+.btn-outline-custom:hover {
+    background-color: #9E7B8A;
+    color: white;
+}
+#valor-total {
+    color: #9E7B8A;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+.form-check-input:checked {
+    background-color: #9E7B8A;
+    border-color: #9E7B8A;
+}
+</style>
+{% endblock %}

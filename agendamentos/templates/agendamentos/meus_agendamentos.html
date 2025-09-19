@@ -1,0 +1,86 @@
+{% extends 'agendamentos/base.html' %}
+
+{% block title %}Meus Agendamentos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-alt me-2"></i>Meus Agendamentos</h2>
+        <a href="{% url 'agendar_servico' %}" class="btn btn-custom">
+            <i class="fas fa-plus me-1"></i>Novo Agendamento
+        </a>
+    </div>
+
+    {% if agendamentos %}
+    <div class="row">
+        {% for agendamento in agendamentos %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header {% if agendamento.status == 'realizado' %}bg-success{% elif agendamento.status == 'cancelado' %}bg-danger{% else %}bg-custom{% endif %} text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-paw me-1"></i>{{ agendamento.nome_pet }}
+                        </h5>
+                        <span class="badge bg-light text-dark">
+                            {{ agendamento.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Serviço:</strong> {{ agendamento.servico.nome }}<br>
+                        <strong>Data:</strong> {{ agendamento.data|date:"d/m/Y" }}<br>
+                        <strong>Horário:</strong> {{ agendamento.horario }}<br>
+                        <strong>Endereço:</strong> {{ agendamento.rua }}, {{ agendamento.numero }} - {{ agendamento.bairro }}<br>
+                        {% if agendamento.complemento %}
+                        <strong>Complemento:</strong> {{ agendamento.complemento }}<br>
+                        {% endif %}
+                        {% if agendamento.observacoes %}
+                        <strong>Observações:</strong><br>
+                        <small>{{ agendamento.observacoes }}</small>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Criado em: {{ agendamento.data_criacao|date:"d/m/Y H:i" }}
+                        </small>
+                        {% if agendamento.status == 'agendado' %}
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Você ainda não tem agendamentos</h4>
+        <p class="text-muted">Agende seu primeiro serviço para seu pet!</p>
+        <a href="{% url 'agendar_servico' %}" class="btn btn-custom mt-2">
+            <i class="fas fa-plus me-1"></i>Fazer Primeiro Agendamento
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.bg-custom {
+    background-color: #9E7B8A !important;
+}
+.card {
+    border-radius: 12px;
+    border: none;
+}
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'agendamentos/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Cadastro{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card p-4 shadow-lg" style="width: 100%; max-width: 400px; border-radius: 15px;">
+        <h2 class="text-center mb-4" style="color: #9E7B8A;">Criar Conta</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label visually-hidden">{{ field.label }}</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light" style="border-radius: 20px 0 0 20px;">
+                        {% if field.name == 'username' %}<i class="fas fa-user text-muted"></i>
+                        {% elif field.name == 'email' %}<i class="fas fa-envelope text-muted"></i>
+                        {% else %}<i class="fas fa-lock text-muted"></i>
+                        {% endif %}
+                    </span>
+                    {{ field|add_class:"form-control" }}
+                    {% if field.name == 'password1' or field.name == 'password2' %}
+                    <button class="btn btn-outline-secondary bg-light" type="button" id="togglePassword{% if field.name == 'password2' %}2{% endif %}" style="border-radius: 0 20px 20px 0;"><i class="fas fa-eye text-muted"></i></button>
+                    {% endif %}
+                </div>
+                
+                {% if field.name == 'password1' %}
+                    <div id="password-requirements" class="mt-2 p-3 rounded" style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; font-size: 0.85em;">
+                        <p class="mb-1">Sua senha deve conter:</p>
+                        <ul class="list-unstyled mb-0">
+                            <li id="req-lowercase"><i class="fas fa-times me-2"></i>1 letra minúscula</li>
+                            <li id="req-uppercase"><i class="fas fa-times me-2"></i>1 letra maiúscula</li>
+                            <li id="req-number"><i class="fas fa-times me-2"></i>1 número</li>
+                            <li id="req-length"><i class="fas fa-times me-2"></i>No mínimo 8 caracteres</li>
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <div class="alert alert-danger mt-1 p-2 small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-custom btn-lg">Cadastrar</button>
+            </div>
+            <p class="text-center mt-3 small">Já tem uma conta? <a href="{% url 'login' %}" style="color: #9E7B8A; text-decoration: none;">Entrar</a></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Script para alternar visibilidade da senha
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('id_password1');
+        const togglePassword2 = document.getElementById('togglePassword2');
+        const passwordInput2 = document.getElementById('id_password2');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function (e) {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+        if (togglePassword2 && passwordInput2) {
+            togglePassword2.addEventListener('click', function (e) {
+                const type = passwordInput2.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput2.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Script para validação de senha em tempo real
+        const passwordRequirements = {
+            lowercase: document.getElementById('req-lowercase'),
+            uppercase: document.getElementById('req-uppercase'),
+            number: document.getElementById('req-number'),
+            length: document.getElementById('req-length')
+        };
+
+        if (passwordInput && passwordRequirements.lowercase) {
+            passwordInput.addEventListener('keyup', function() {
+                const value = passwordInput.value;
+                const updateRequirement = (reqElement, condition) => {
+                    if (condition) {
+                        reqElement.classList.remove('text-danger');
+                        reqElement.classList.add('text-success');
+                        reqElement.querySelector('i').classList.replace('fa-times', 'fa-check');
+                    } else {
+                        reqElement.classList.remove('text-success');
+                        reqElement.classList.add('text-danger');
+                        reqElement.querySelector('i').classList.replace('fa-check', 'fa-times');
+                    }
+                };
+
+                updateRequirement(passwordRequirements.lowercase, /[a-z]/.test(value));
+                updateRequirement(passwordRequirements.uppercase, /[A-Z]/.test(value));
+                updateRequirement(passwordRequirements.number, /[0-9]/.test(value));
+                updateRequirement(passwordRequirements.length, value.length >= 8);
+            });
+        }
+    });
+</script>
+{% endblock %}
