@@ -1,0 +1,127 @@
+{% extends 'agendamentos/base.html' %}
+
+{% block title %}Editar Agendamento{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-edit me-2"></i>Editar Agendamento</h2>
+        <a href="{% url 'meus_agendamentos' %}" class="btn btn-custom">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm p-4">
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Nome do Tutor -->
+            <div class="mb-3">
+                <label for="id_nome_tutor" class="form-label">Nome do Tutor</label>
+                {{ form.nome_tutor }}
+            </div>
+
+            <!-- Pet -->
+            <div class="mb-3">
+                <label for="id_pet" class="form-label">Pet</label>
+                {{ form.pet }}
+            </div>
+
+            <!-- Tipo do Pet -->
+            <div class="mb-3">
+                <label for="id_tipo_pet" class="form-label">Tipo do Pet</label>
+                {{ form.tipo_pet }}
+            </div>
+
+            <!-- Serviços -->
+            <div class="mb-3">
+                <label for="id_servicos" class="form-label">Serviços</label>
+                {{ form.servicos }}
+            </div>
+
+            <!-- Data e Horário -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_data" class="form-label">Data</label>
+                    {{ form.data }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_horario" class="form-label">Horário</label>
+                    {{ form.horario }}
+                </div>
+            </div>
+
+            <!-- Endereço -->
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="id_cep" class="form-label">CEP</label>
+                    {{ form.cep }}
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="id_rua" class="form-label">Rua</label>
+                    {{ form.rua }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="id_numero" class="form-label">Número</label>
+                    {{ form.numero }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="id_bairro" class="form-label">Bairro</label>
+                    {{ form.bairro }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_complemento" class="form-label">Complemento</label>
+                    {{ form.complemento }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="id_cidade" class="form-label">Cidade</label>
+                    {{ form.cidade }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="id_estado" class="form-label">Estado</label>
+                    {{ form.estado }}
+                </div>
+            </div>
+
+            <!-- Pagamento e Observações -->
+            <div class="mb-3">
+                <label for="id_forma_pagamento" class="form-label">Forma de Pagamento</label>
+                {{ form.forma_pagamento }}
+            </div>
+
+            <div class="mb-3">
+                <label for="id_observacoes" class="form-label">Observações</label>
+                {{ form.observacoes }}
+            </div>
+
+            <!-- Motivo Cancelamento (opcional) -->
+            {% if agendamento.status == 'cancelado' %}
+            <div class="mb-3">
+                <label for="id_motivo_cancelamento" class="form-label">Motivo do Cancelamento</label>
+                {{ form.motivo_cancelamento }}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-custom mt-3">
+                <i class="fas fa-save me-1"></i>Salvar Alterações
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+.bg-custom {
+    background-color: #9E7B8A !important;
+}
+.card {
+    border-radius: 12px;
+    border: none;
+}
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+</style>
+{% endblock %}

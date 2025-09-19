@@ -1,6 +1,6 @@
 {% extends 'agendamentos/base.html' %}
 
-{% block title %}Agendar Serviço{% endblock %}
+{% block title %}{% if editar %}Editar Agendamento{% else %}Agendar Serviço{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -9,7 +9,8 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-custom text-white">
                     <h4 class="mb-0">
-                        <i class="fas fa-calendar-plus me-2"></i>Agendar Serviço
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        {% if editar %}Editar Agendamento{% else %}Agendar Serviço{% endif %}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -143,7 +144,7 @@
                                     <div class="text-danger small">{{ form.numero.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="col-md-5 mb-3">
                                 <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro *</label>
                                 {{ form.bairro }}
@@ -169,7 +170,7 @@
                                     <div class="text-danger small">{{ form.estado.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="col-md-10 mb-3">
                                 <label for="{{ form.complemento.id_for_label }}" class="form-label">Complemento</label>
                                 {{ form.complemento }}
@@ -201,7 +202,8 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-custom btn-lg">
-                                <i class="fas fa-calendar-check me-2"></i>Confirmar Agendamento
+                                <i class="fas fa-calendar-check me-2"></i>
+                                {% if editar %}Salvar Alterações{% else %}Confirmar Agendamento{% endif %}
                             </button>
                         </div>
                     </form>
@@ -213,7 +215,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Cálculo do valor total
     function calcularValorTotal() {
         let total = 0;
         document.querySelectorAll('input[name="servicos"]:checked').forEach(checkbox => {
@@ -223,70 +224,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 const precoMatch = texto.match(/R\$\s*([\d,]+\.?\d*)/);
                 if (precoMatch) {
                     const preco = parseFloat(precoMatch[1].replace(',', '.'));
-                    if (!isNaN(preco)) {
-                        total += preco;
-                    }
+                    if (!isNaN(preco)) total += preco;
                 }
             }
         });
         document.getElementById('valor-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
     }
-    
-    // Event listener para checkboxes de serviços
     document.querySelectorAll('input[name="servicos"]').forEach(checkbox => {
         checkbox.addEventListener('change', calcularValorTotal);
     });
-    
-    // Consulta de CEP
+    calcularValorTotal(); // Calcula ao carregar a página, útil para edição
+
+    // Consulta CEP
     document.getElementById('btn-cep').addEventListener('click', function() {
         const cepInput = document.getElementById('{{ form.cep.id_for_label }}');
         const cep = cepInput.value.replace(/\D/g, '');
-        
-        if (cep.length !== 8) {
-            alert('CEP deve ter 8 dígitos');
-            return;
-        }
-        
-        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        this.disabled = true;
-        
+        if (cep.length !== 8) { alert('CEP deve ter 8 dígitos'); return; }
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; this.disabled = true;
         fetch(`/consultar-cep/?cep=${cep}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erro na resposta da API');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                if (data.error) {
-                    alert('Erro: ' + data.error);
-                } else {
+                if (data.error) alert('Erro: ' + data.error);
+                else {
                     document.getElementById('{{ form.rua.id_for_label }}').value = data.rua || '';
                     document.getElementById('{{ form.bairro.id_for_label }}').value = data.bairro || '';
                     document.getElementById('{{ form.cidade.id_for_label }}').value = data.cidade || '';
                     document.getElementById('{{ form.estado.id_for_label }}').value = data.estado || '';
                     document.getElementById('{{ form.numero.id_for_label }}').focus();
                 }
-            })
-            .catch(error => {
-                alert('Erro ao consultar CEP: ' + error.message);
-                console.error('Erro:', error);
-            })
-            .finally(() => {
-                this.innerHTML = '<i class="fas fa-search"></i>';
-                this.disabled = false;
-            });
-    });
-    
-    // Auto-consulta de CEP ao digitar 8 dígitos
-    document.getElementById('{{ form.cep.id_for_label }}').addEventListener('input', function(e) {
-        const cep = this.value.replace(/\D/g, '');
-        if (cep.length === 8) {
-            document.getElementById('btn-cep').click();
-        }
+            }).catch(error => alert('Erro ao consultar CEP: ' + error.message))
+            .finally(() => { this.innerHTML = '<i class="fas fa-search"></i>'; this.disabled = false; });
     });
 
-    // Preencher automaticamente dados do pet quando selecionado
+    document.getElementById('{{ form.cep.id_for_label }}').addEventListener('input', function() {
+        const cep = this.value.replace(/\D/g, '');
+        if (cep.length === 8) document.getElementById('btn-cep').click();
+    });
+
+    // Preencher dados do pet
     const petSelect = document.getElementById('{{ form.pet.id_for_label }}');
     const nomePetInput = document.getElementById('{{ form.nome_pet.id_for_label }}');
     const tipoPetSelect = document.getElementById('{{ form.tipo_pet.id_for_label }}');
@@ -297,15 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedOption.value && selectedOption.value !== '') {
                 const petNome = selectedOption.text.split(' (')[0];
                 const petTipo = selectedOption.getAttribute('data-tipo');
-                
                 nomePetInput.value = petNome;
-                if (petTipo) {
-                    tipoPetSelect.value = petTipo;
-                }
+                if (petTipo) tipoPetSelect.value = petTipo;
             }
         });
-        
-        // Adicionar data-tipo às opções de pet
+
         {% if user.is_authenticated %}
             const pets = {{ pets_json|safe }};
             const options = petSelect.options;
@@ -313,49 +284,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (options[i].value && options[i].value !== '') {
                     const petId = options[i].value;
                     const pet = pets.find(p => p.id == petId);
-                    if (pet) {
-                        options[i].setAttribute('data-tipo', pet.tipo);
-                    }
+                    if (pet) options[i].setAttribute('data-tipo', pet.tipo);
                 }
             }
+        {% endif %}
+
+        // Preenche automaticamente os dados do pet ao editar
+        {% if editar %}
+            if (nomePetInput) nomePetInput.value = '{{ agendamento.nome_pet|escapejs }}';
+            if (tipoPetSelect) tipoPetSelect.value = '{{ agendamento.tipo_pet|escapejs }}';
+            if (petSelect) petSelect.value = '{{ agendamento.pet.id|default:"" }}';
         {% endif %}
     }
 });
 </script>
 
 <style>
-.bg-custom {
-    background-color: #9E7B8A !important;
-}
-.form-label {
-    font-weight: 500;
-    color: #333;
-}
-.form-control, .form-select {
-    border-radius: 8px;
-    border: 2px solid #e9ecef;
-    padding: 12px;
-}
-.form-control:focus, .form-select:focus {
-    border-color: #9E7B8A;
-    box-shadow: 0 0 0 0.2rem rgba(158, 123, 138, 0.25);
-}
-.btn-outline-custom {
-    color: #9E7B8A;
-    border-color: #9E7B8A;
-}
-.btn-outline-custom:hover {
-    background-color: #9E7B8A;
-    color: white;
-}
-#valor-total {
-    color: #9E7B8A;
-    font-weight: bold;
-    font-size: 1.2em;
-}
-.form-check-input:checked {
-    background-color: #9E7B8A;
-    border-color: #9E7B8A;
-}
+.bg-custom { background-color: #9E7B8A !important; }
+.form-label { font-weight: 500; color: #333; }
+.form-control, .form-select { border-radius: 8px; border: 2px solid #e9ecef; padding: 12px; }
+.form-control:focus, .form-select:focus { border-color: #9E7B8A; box-shadow: 0 0 0 0.2rem rgba(158, 123, 138, 0.25); }
+.btn-outline-custom { color: #9E7B8A; border-color: #9E7B8A; }
+.btn-outline-custom:hover { background-color: #9E7B8A; color: white; }
+#valor-total { color: #9E7B8A; font-weight: bold; font-size: 1.2em; }
+.form-check-input:checked { background-color: #9E7B8A; border-color: #9E7B8A; }
 </style>
 {% endblock %}

@@ -196,3 +196,52 @@ def consultar_cep(request):
         
     except Exception as e:
         return JsonResponse({'error': 'Erro ao consultar CEP: ' + str(e)}, status=500)
+
+# ===========================
+# NOVAS FUNÇÕES: Editar e Cancelar Agendamento
+# ===========================
+
+@login_required
+def editar_agendamento(request, agendamento_id):
+    agendamento = get_object_or_404(Agendamento, id=agendamento_id, usuario=request.user)
+
+    if request.method == 'POST':
+        form = AgendamentoForm(request.POST, instance=agendamento, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Agendamento atualizado com sucesso!')
+            return redirect('meus_agendamentos')
+    else:
+        form = AgendamentoForm(instance=agendamento, user=request.user)
+
+    # Monta os pets em JSON para o JS do template (mesmo que no cadastro)
+    pets_json = []
+    if request.user.is_authenticated:
+        pets = Pet.objects.filter(dono=request.user)
+        pets_json = [{'id': pet.id, 'nome': pet.nome, 'tipo': pet.tipo} for pet in pets]
+
+    servicos = Servico.objects.filter(ativo=True)
+
+    return render(request, 'agendamentos/agendar_servico.html', {
+        'form': form,
+        'servicos': servicos,
+        'pets_json': json.dumps(pets_json),
+        'editar': True,  # Podemos usar no template para mostrar "Editar Agendamento"
+        'agendamento': agendamento
+    })
+
+
+@login_required
+def cancelar_agendamento(request, agendamento_id):
+    agendamento = get_object_or_404(Agendamento, id=agendamento_id, usuario=request.user)
+    
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo', '')
+        agendamento.status = 'cancelado'
+        if motivo:
+            agendamento.motivo_cancelamento = motivo
+        agendamento.save()
+        messages.warning(request, 'Agendamento cancelado com sucesso!')
+        return redirect('meus_agendamentos')
+    
+    return redirect('meus_agendamentos')

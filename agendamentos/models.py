@@ -1,5 +1,3 @@
-# agendamentos/models.py
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -124,6 +122,7 @@ class Agendamento(models.Model):
     
     # Status e informações adicionais
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='agendado', verbose_name='Status')
+    motivo_cancelamento = models.TextField(blank=True, verbose_name='Motivo do Cancelamento')  # NOVO CAMPO
     observacoes = models.TextField(blank=True, verbose_name='Observações')
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
