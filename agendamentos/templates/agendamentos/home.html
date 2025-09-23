@@ -25,7 +25,7 @@
     <div class="row mb-5">
         <div class="col-12">
             <h2 class="text-center mb-4" style="color: #9E7B8A;">
-                <i class="fas fa-concierge-bell me-2"></i>Nossos Serviços
+                <i class="fas fa-cart-shopping me-2"></i>Nossos Serviços
             </h2>
         </div>
         
@@ -34,7 +34,7 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
                     <div class="service-icon mb-3" style="font-size: 3rem;">
-                        <i class="fas fa-first-aid"></i>
+                        <i class="{{ servico.icone }}"></i>
                     </div>
                     <h5 class="card-title">{{ servico.nome }}</h5>
                     <h6 class="text-custom">R$ {{ servico.preco }}</h6>

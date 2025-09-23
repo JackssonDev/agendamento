@@ -59,6 +59,12 @@ class Servico(models.Model):
     )
     descricao = models.TextField(verbose_name='Descrição', blank=True)
     ativo = models.BooleanField(default=True, verbose_name='Ativo')
+    icone = models.CharField(
+        max_length=50,
+        verbose_name='Ícone (classe do FontAwesome)',
+        default='fas fa-paw',
+        help_text="Ex: fas fa-dog, fas fa-cat, fas fa-syringe"
+    )
     
     class Meta:
         verbose_name = 'Serviço'

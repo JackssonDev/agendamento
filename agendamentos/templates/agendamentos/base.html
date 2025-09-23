@@ -130,16 +130,6 @@
             </a>
 
             <ul class="navbar-nav ms-auto flex-row align-items-center">
-                <li class="nav-item me-3">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-heart"></i>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-shopping-bag"></i>
-                    </a>
-                </li>
             </ul>
         </div>
     </nav>
@@ -158,7 +148,7 @@
           {% if user.is_authenticated %}
               <li class="nav-item">
                 <span class="nav-link text-muted small">
-                    <i class="fas fa-user me-2"></i>Logado como: {{ user.username }}
+                    <i class="fas fa-user me-2"></i>{{ user.username }}
                 </span>
               </li>
               <li class="nav-item">
