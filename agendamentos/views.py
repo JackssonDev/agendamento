@@ -1,5 +1,3 @@
-# agendamentos/views.py
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib import messages
@@ -11,7 +9,7 @@ from datetime import date, datetime, time, timedelta
 import json
 import urllib.request
 import json as json_lib
-from django.utils import timezone # <--- NOVO: Importa timezone para lidar com o horário do servidor
+from django.utils import timezone # <--- Importado
 
 # ==============================================================================
 # Funções de Auxílio para Agendamento por Duração
@@ -275,13 +273,14 @@ def agendar_servico(request):
     })
 
 # ==============================================================================
-# View de Disponibilidade (CORRIGIDA - Implementa Filtro de Horário Atual)
+# View de Disponibilidade (CORRIGIDA)
 # ==============================================================================
 
 def verificar_horarios_disponiveis(request):
     data = request.GET.get('data')
     # O frontend precisa enviar uma string de IDs separados por vírgula (ex: "1,3,4")
-    servicos_ids_str = request.GET.get('servicos_ids', '')
+    # REMOVIDO: default='', pois o frontend DEVE enviar
+    servicos_ids_str = request.GET.get('servicos_ids') 
     
     if not data or not servicos_ids_str:
         # Se os serviços não foram selecionados, não podemos calcular a duração
@@ -296,12 +295,16 @@ def verificar_horarios_disponiveis(request):
         hoje = agora_local.date()
         
         # Define a hora limite para agendamento (hora atual arredondada para baixo, mais 15 minutos)
-        # Ex: Se são 10:50, o primeiro slot deve ser 11:00.
-        # Se são 10:56 (seu horário atual), o primeiro slot deve ser 11:00.
         hora_minima_para_agendar = agora_local + timedelta(minutes=15)
         
         # 2. Calcular a duração potencial do NOVO agendamento
+        # Garante que IDs vazios não quebrem
         servicos_ids = [int(sid) for sid in servicos_ids_str.split(',') if sid]
+        
+        # Garante que pelo menos um serviço foi selecionado (já que servicos_ids_str não é nulo/vazio)
+        if not servicos_ids:
+            return JsonResponse({'error': 'Serviço(s) inválido(s) selecionado(s).'}, status=400)
+            
         duracao_novo_agendamento = calcular_duracao_total(servicos_ids)
         
         horarios_possiveis = gerar_horarios_possiveis(intervalo_minutos=15)
@@ -318,10 +321,14 @@ def verificar_horarios_disponiveis(request):
             
             slot_time = datetime.strptime(horario_str, '%H:%M').time()
             
-            # --- NOVO FILTRO DE TEMPO PASSADO ---
+            # --- NOVO FILTRO DE TEMPO PASSADO (CORRIGIDO PARA O ERRO 500) ---
             if data_obj == hoje:
-                # Converte o horário do slot para um objeto datetime completo para comparação
-                slot_dt_completo = datetime.combine(data_obj, slot_time)
+                # Cria o datetime NAIVE (sem fuso)
+                slot_dt_naive = datetime.combine(data_obj, slot_time)
+                
+                # Converte o slot para AWARE para que a comparação funcione
+                slot_dt_completo = timezone.make_aware(slot_dt_naive, timezone.get_current_timezone()) 
+                
                 # O horário do slot deve ser maior ou igual à hora mínima de agendamento de hoje
                 if slot_dt_completo < hora_minima_para_agendar.replace(second=0, microsecond=0):
                     continue # Pula o slot se ele já passou
