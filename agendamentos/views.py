@@ -2,14 +2,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, PetForm, DadosPessoaisForm, AgendamentoForm
-from .models import Pet, PerfilUsuario, Servico, Agendamento
 from django.http import JsonResponse
+from django.utils import timezone
 from datetime import date, datetime, time, timedelta
 import json
 import urllib.request
-import json as json_lib
-from django.utils import timezone # <--- Importado
+# O 'json as json_lib' não é necessário se você apenas usar 'json'
+# import json as json_lib 
+
+from .forms import (
+    CustomUserCreationForm, CustomAuthenticationForm, PetForm, 
+    DadosPessoaisForm, AgendamentoForm
+)
+from .models import Pet, PerfilUsuario, Servico, Agendamento
 
 # ==============================================================================
 # Funções de Auxílio para Agendamento por Duração
@@ -18,16 +23,16 @@ from django.utils import timezone # <--- Importado
 def calcular_duracao_total(servicos_ids):
     """Calcula a duração total em minutos somando a duração de todos os serviços."""
     
-    # 1. Converte as IDs (strings) para inteiros
+    # Converte as IDs (strings) para inteiros
     servicos_ids = [int(sid) for sid in servicos_ids if sid]
     
-    # 2. Busca e soma a duração_minutos dos serviços
+    # Busca e soma a duração_minutos dos serviços
     duracao_soma = sum(
         Servico.objects.filter(id=sid).values_list('duracao_minutos', flat=True).first() or 0 
         for sid in servicos_ids
     )
     
-    # 3. Retorna a duração mínima de 15 minutos, caso a soma seja menor
+    # Retorna a duração mínima de 15 minutos (ou a soma)
     return max(15, duracao_soma)
 
 def gerar_horarios_possiveis(intervalo_minutos=15):
@@ -98,7 +103,7 @@ def is_slot_livre(data_agendamento, horario_inicio_str, duracao_minutos, agendam
     return True # Slot LIVRE
 
 # ==============================================================================
-# Views Existentes (com alterações na lógica de agendamento)
+# Views de Autenticação e Informação (sem alterações na lógica)
 # ==============================================================================
 
 def home(request):
@@ -136,7 +141,6 @@ def logout_view(request):
 
 @login_required
 def meus_agendamentos(request):
-    # Alterado 'horario' para 'horario_inicio' na ordenação
     agendamentos = Agendamento.objects.filter(usuario=request.user).order_by('-data', 'horario_inicio') 
     return render(request, 'agendamentos/meus_agendamentos.html', {'agendamentos': agendamentos})
 
@@ -186,37 +190,36 @@ def excluir_pet(request, pet_id):
 
 @login_required
 def dados_pessoais(request):
-    if request.user.is_superuser or request.user.is_staff:
-        messages.info(request, 'Usuários administradores não possuem perfil personalizado.')
-        return redirect('home')
+    # Simplificado a checagem de superuser/staff, pois o perfil só se aplica a clientes
+    if not request.user.is_superuser and not request.user.is_staff:
+        perfil, created = PerfilUsuario.objects.get_or_create(usuario=request.user)
+        
+        if created:
+            messages.info(request, 'Perfil criado com sucesso! Complete seus dados.')
+        
+        if request.method == 'POST':
+            form = DadosPessoaisForm(request.POST, instance=perfil)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Dados pessoais atualizados com sucesso!')
+                return redirect('dados_pessoais')
+        else:
+            form = DadosPessoaisForm(instance=perfil)
+        
+        return render(request, 'agendamentos/dados_pessoais.html', {'form': form})
     
-    perfil, created = PerfilUsuario.objects.get_or_create(usuario=request.user)
-    
-    if created:
-        messages.info(request, 'Perfil criado com sucesso! Complete seus dados.')
-    
-    if request.method == 'POST':
-        form = DadosPessoaisForm(request.POST, instance=perfil)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Dados pessoais atualizados com sucesso!')
-            return redirect('dados_pessoais')
-    else:
-        form = DadosPessoaisForm(instance=perfil)
-    
-    return render(request, 'agendamentos/dados_pessoais.html', {'form': form})
+    messages.info(request, 'Usuários administradores não possuem perfil personalizado.')
+    return redirect('home')
 
 # ==============================================================================
-# View de Agendamento (ALTERADA)
+# Views de Agendamento e Utilitários
 # ==============================================================================
 
 def agendar_servico(request):
     if request.method == 'POST':
-        # Instanciar o formulário para validação inicial de dados
         form = AgendamentoForm(request.POST, user=request.user if request.user.is_authenticated else None)
         
-        # Capturar os dados brutos antes de validar o formulário
-        servicos_ids = request.POST.getlist('servicos') # IDs dos serviços
+        servicos_ids = request.POST.getlist('servicos')
         horario_inicio_str = request.POST.get('horario_inicio')
         data_str = request.POST.get('data')
 
@@ -239,11 +242,9 @@ def agendar_servico(request):
             # 3. SALVAR O AGENDAMENTO (com novos campos)
             agendamento = form.save(commit=False)
             
-            # Preenche os campos de duração e horário de início
             agendamento.duracao_total_minutos = duracao_total
             agendamento.horario_inicio = datetime.strptime(horario_inicio_str, '%H:%M').time()
             
-            # Código original de autenticação do usuário
             if request.user.is_authenticated:
                 agendamento.usuario = request.user
                 pet = form.cleaned_data.get('pet')
@@ -272,36 +273,26 @@ def agendar_servico(request):
         'pets_json': json.dumps(pets_json)
     })
 
-# ==============================================================================
-# View de Disponibilidade (CORRIGIDA)
-# ==============================================================================
-
 def verificar_horarios_disponiveis(request):
     data = request.GET.get('data')
-    # O frontend precisa enviar uma string de IDs separados por vírgula (ex: "1,3,4")
-    # REMOVIDO: default='', pois o frontend DEVE enviar
     servicos_ids_str = request.GET.get('servicos_ids') 
     
     if not data or not servicos_ids_str:
-        # Se os serviços não foram selecionados, não podemos calcular a duração
         return JsonResponse({'error': 'Data e serviços são obrigatórios para verificar a disponibilidade'}, status=400)
     
     try:
         # 1. Preparação de Data e Hora
         data_obj = date.fromisoformat(data)
         
-        # Obtém o horário atual do servidor no fuso horário configurado no settings.py
         agora_local = timezone.localtime(timezone.now())
         hoje = agora_local.date()
         
-        # Define a hora limite para agendamento (hora atual arredondada para baixo, mais 15 minutos)
+        # Define a hora limite para agendamento
         hora_minima_para_agendar = agora_local + timedelta(minutes=15)
         
         # 2. Calcular a duração potencial do NOVO agendamento
-        # Garante que IDs vazios não quebrem
         servicos_ids = [int(sid) for sid in servicos_ids_str.split(',') if sid]
         
-        # Garante que pelo menos um serviço foi selecionado (já que servicos_ids_str não é nulo/vazio)
         if not servicos_ids:
             return JsonResponse({'error': 'Serviço(s) inválido(s) selecionado(s).'}, status=400)
             
@@ -321,17 +312,13 @@ def verificar_horarios_disponiveis(request):
             
             slot_time = datetime.strptime(horario_str, '%H:%M').time()
             
-            # --- NOVO FILTRO DE TEMPO PASSADO (CORRIGIDO PARA O ERRO 500) ---
+            # --- FILTRO DE TEMPO PASSADO ---
             if data_obj == hoje:
-                # Cria o datetime NAIVE (sem fuso)
                 slot_dt_naive = datetime.combine(data_obj, slot_time)
-                
-                # Converte o slot para AWARE para que a comparação funcione
                 slot_dt_completo = timezone.make_aware(slot_dt_naive, timezone.get_current_timezone()) 
                 
-                # O horário do slot deve ser maior ou igual à hora mínima de agendamento de hoje
                 if slot_dt_completo < hora_minima_para_agendar.replace(second=0, microsecond=0):
-                    continue # Pula o slot se ele já passou
+                    continue
             # ------------------------------------
             
             # Slot que o usuário está tentando reservar (início e fim)
@@ -373,9 +360,10 @@ def consultar_cep(request):
         
         with urllib.request.urlopen(url) as response:
             data = response.read().decode('utf-8')
-            data = json_lib.loads(data)
+            # Uso direto de 'json' ao invés de 'json_lib'
+            data = json.loads(data)
         
-        if 'erro' in data:
+        if data.get('erro'):
             return JsonResponse({'error': 'CEP não encontrado'}, status=404)
         
         return JsonResponse({
@@ -388,10 +376,6 @@ def consultar_cep(request):
     except Exception as e:
         return JsonResponse({'error': 'Erro ao consultar CEP: ' + str(e)}, status=500)
 
-# ===========================
-# NOVAS FUNÇÕES: Editar e Cancelar Agendamento (MUDANÇAS MÍNIMAS)
-# ===========================
-
 @login_required
 def editar_agendamento(request, agendamento_id):
     agendamento = get_object_or_404(Agendamento, id=agendamento_id, usuario=request.user)
@@ -399,12 +383,12 @@ def editar_agendamento(request, agendamento_id):
     if request.method == 'POST':
         form = AgendamentoForm(request.POST, instance=agendamento, user=request.user)
         
-        # Capturar os dados brutos
         servicos_ids = request.POST.getlist('servicos') 
         horario_inicio_str = request.POST.get('horario_inicio')
         data_str = request.POST.get('data')
 
         if form.is_valid():
+            
             # 1. CÁLCULO DA DURAÇÃO
             duracao_total = calcular_duracao_total(servicos_ids)
             
@@ -414,23 +398,21 @@ def editar_agendamento(request, agendamento_id):
                 messages.error(request, "Data inválida.")
                 return redirect('meus_agendamentos')
                 
-            # 2. VALIDAÇÃO DE CONFLITO (incluindo a ID para ignorar o próprio agendamento)
+            # 2. VALIDAÇÃO DE CONFLITO
             if not is_slot_livre(data_agendamento, horario_inicio_str, duracao_total, agendamento_id=agendamento.id):
                 messages.error(request, f"O horário selecionado ({horario_inicio_str}) está ocupado pelo período de {duracao_total} minutos. Escolha outro horário.")
                 return redirect('meus_agendamentos')
 
-            # 3. SALVAR (com novos campos)
+            # 3. SALVAR
             agendamento = form.save(commit=False)
             agendamento.duracao_total_minutos = duracao_total
             agendamento.horario_inicio = datetime.strptime(horario_inicio_str, '%H:%M').time()
             agendamento.save()
-            form.save_m2m() # Salva a relação de serviços
+            form.save_m2m()
 
             messages.success(request, 'Agendamento atualizado com sucesso!')
             return redirect('meus_agendamentos')
     else:
-        # Se for GET, o horário no form deve ser o TimeField
-        # O campo 'horario' no form deve ser preenchido corretamente pelo Django
         form = AgendamentoForm(instance=agendamento, user=request.user)
 
     # Monta os pets em JSON para o JS do template

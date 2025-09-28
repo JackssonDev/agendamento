@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Banner de boas-vindas -->
     <div class="row mb-5">
         <div class="col-12">
             <div class="jumbotron bg-light p-5 rounded text-center">
@@ -21,7 +20,6 @@
         </div>
     </div>
 
-    <!-- Serviços em Destaque -->
     <div class="row mb-5">
         <div class="col-12">
             <h2 class="text-center mb-4" style="color: #9E7B8A;">
@@ -31,28 +29,32 @@
         
         {% for servico in servicos %}
         <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
+            <div class="card h-100 shadow-sm d-flex flex-column"> 
+                
+                <div class="card-body text-center flex-grow-0">
                     <div class="service-icon mb-3" style="font-size: 3rem;">
                         <i class="{{ servico.icone }}"></i>
                     </div>
                     <h5 class="card-title">{{ servico.nome }}</h5>
                     <h6 class="text-custom">R$ {{ servico.preco }}</h6>
-                    {% if servico.descricao %}
-                    <p class="card-text text-muted small">{{ servico.descricao }}</p>
+                    
+                    {% if not servico.imagem and servico.descricao %}
+                    <p class="card-text text-muted small mt-2">{{ servico.descricao }}</p>
                     {% endif %}
                 </div>
-                <div class="card-footer bg-transparent">
-                    <a href="{% url 'agendar_servico' %}" class="btn btn-outline-custom w-100">
-                        <i class="fas fa-calendar me-1"></i>Agendar
-                    </a>
+                
+                {% if servico.imagem %}
+                <img src="{{ servico.imagem.url }}" 
+                     class="card-img-bottom" 
+                     alt="Foto do Serviço {{ servico.nome }}" 
+                     style="height: 180px; object-fit: cover;">
+                {% endif %}
+                
                 </div>
-            </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Chamada para ação -->
     <div class="row">
         <div class="col-12">
             <div class="card bg-light">

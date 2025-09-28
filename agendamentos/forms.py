@@ -1,14 +1,14 @@
-# agendamentos/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from .models import Pet, PerfilUsuario, Servico, Agendamento
 from django.core.exceptions import ValidationError
 from datetime import date
 import re
 
+from .models import Pet, PerfilUsuario, Servico, Agendamento
+
 # ==============================================================================
-# Classes CustomUserCreationForm, CustomAuthenticationForm e PetForm permanecem inalteradas
+# Formulários de Autenticação e Perfil
 # ==============================================================================
 
 class CustomUserCreationForm(UserCreationForm):
@@ -23,22 +23,23 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'placeholder': 'Seu nome de usuário'})
         self.fields['password1'].widget.attrs.update({'placeholder': 'Crie uma senha'})
         self.fields['password2'].widget.attrs.update({'placeholder': 'Repita a senha'})
-        self.fields['username'].help_text = ''
-        self.fields['password1'].help_text = ''
-        self.fields['password2'].help_text = ''
+        self.fields['username'].help_text = None
+        self.fields['password1'].help_text = None
+        self.fields['password2'].help_text = None
 
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({'placeholder': 'Nome de usuário ou e-mail', 'autocomplete': 'username'})
         self.fields['password'].widget.attrs.update({'placeholder': 'Sua senha', 'autocomplete': 'current-password'})
-        self.fields['username'].help_text = ''
-        self.fields['password'].help_text = ''
+        self.fields['username'].help_text = None
+        self.fields['password'].help_text = None
 
 class PetForm(forms.ModelForm):
     class Meta:
@@ -60,9 +61,11 @@ class PetForm(forms.ModelForm):
         }
 
 class DadosPessoaisForm(forms.ModelForm):
+    # Campos herdados do modelo User
     first_name = forms.CharField(max_length=30, required=True, label='Nome', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Seu nome'}))
     last_name = forms.CharField(max_length=30, required=True, label='Sobrenome', widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Seu sobrenome'}))
     email = forms.EmailField(required=True, label='E-mail', widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'seu.email@exemplo.com'}))
+    
     class Meta:
         model = PerfilUsuario
         fields = ['first_name', 'last_name', 'email', 'cpf', 'genero', 'data_nascimento', 'telefone']
@@ -73,12 +76,14 @@ class DadosPessoaisForm(forms.ModelForm):
             'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(00) 00000-0000'}),
         }
         labels = {'cpf': 'CPF', 'genero': 'Gênero', 'data_nascimento': 'Data de Nascimento', 'telefone': 'Telefone'}
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.usuario:
             self.fields['first_name'].initial = self.instance.usuario.first_name
             self.fields['last_name'].initial = self.instance.usuario.last_name
             self.fields['email'].initial = self.instance.usuario.email
+            
     def save(self, commit=True):
         perfil = super().save(commit=False)
         if perfil.usuario:
@@ -89,11 +94,13 @@ class DadosPessoaisForm(forms.ModelForm):
                 perfil.usuario.save()
                 perfil.save()
         return perfil
+        
     def clean_cpf(self):
         cpf = re.sub(r'[^0-9]', '', self.cleaned_data.get('cpf', ''))
         if cpf and len(cpf) != 11:
             raise ValidationError('CPF deve ter 11 dígitos.')
         return cpf
+        
     def clean_telefone(self):
         telefone = re.sub(r'[^0-9]', '', self.cleaned_data.get('telefone', ''))
         if telefone and len(telefone) not in [10, 11]:
@@ -101,7 +108,7 @@ class DadosPessoaisForm(forms.ModelForm):
         return telefone
 
 # ==============================================================================
-# CLASSE AGENDAMENTO FORM (ALTERADA)
+# Formulário de Agendamento
 # ==============================================================================
 
 class AgendamentoForm(forms.ModelForm):
@@ -111,8 +118,7 @@ class AgendamentoForm(forms.ModelForm):
         label='Serviços *'
     )
     
-    # NOVO CAMPO DE HORÁRIO: Renomeado para 'horario_inicio' e removido o Select estático
-    # Usamos um ChoiceField, mas ele será populado com as opções vindas do JS (vazio por padrão)
+    # Horário de Início: Gerado por JS, mas validado pelo Django.
     horario_inicio = forms.CharField(
         required=True,
         label='Horário de Início',
@@ -127,15 +133,12 @@ class AgendamentoForm(forms.ModelForm):
             'data', 'horario_inicio', 'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado', 
             'complemento', 'forma_pagamento', 'observacoes'
         ]
-        # O campo 'horario' original foi substituído por 'horario_inicio' no fields acima
         widgets = {
             'pet': forms.Select(attrs={'class': 'form-select'}),
             'nome_tutor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do tutor'}),
             'nome_pet': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do pet'}),
             'tipo_pet': forms.Select(attrs={'class': 'form-select'}),
             'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'min': date.today().isoformat(), 'id': 'data-agendamento'}),
-            # O campo 'horario' antigo (que era forms.Select) foi removido dos widgets.
-            # O novo campo 'horario_inicio' usa o widget definido acima (forms.Select)
             'cep': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00000-000', 'id': 'cep'}),
             'rua': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da rua', 'id': 'rua'}),
             'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número', 'id': 'numero'}),
@@ -151,11 +154,11 @@ class AgendamentoForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # ... (código para filtrar pets e preencher campos iniciais permanece inalterado)
+        # 1. Filtrar Pets
         if self.user and self.user.is_authenticated:
             self.fields['pet'].queryset = Pet.objects.filter(dono=self.user)
+            # Preenche nome do tutor se autenticado
             try:
-                perfil = self.user.perfil
                 if not self.initial.get('nome_tutor'):
                     self.fields['nome_tutor'].initial = f"{self.user.first_name} {self.user.last_name}".strip()
             except PerfilUsuario.DoesNotExist:
@@ -163,23 +166,20 @@ class AgendamentoForm(forms.ModelForm):
         else:
             self.fields['pet'].queryset = Pet.objects.none()
 
-        # Preenche tipo de pet
-        self.fields['tipo_pet'].widget.choices = [('', 'Selecione o tipo...')] + Pet.TIPO_CHOICES # Usando Pet.TIPO_CHOICES do models.py para consistência
-
-        # Preenche forma de pagamento
+        # 2. Configurar Choices para Selects
+        # O Django usa choices de ModelField, mas adicionamos a opção vazia aqui
+        self.fields['tipo_pet'].widget.choices = [('', 'Selecione o tipo...')] + Pet.TIPO_CHOICES 
         self.fields['forma_pagamento'].widget.choices = [('', 'Selecione a forma de pagamento...')] + Agendamento.FORMA_PAGAMENTO_CHOICES
         
-        # Se for um formulário de edição, preenche o horário inicial (TimeField)
+        # 3. Tratamento para Edição
         if self.instance and self.instance.pk:
-            # Se for edição, o TimeField precisa ser formatado para ser carregado corretamente no campo
             if self.instance.horario_inicio:
                 self.fields['horario_inicio'].initial = self.instance.horario_inicio.strftime('%H:%M')
                 self.fields['horario_inicio'].widget.attrs.pop('disabled', None)
             
-            # Popula a lista de serviços selecionados (para edição)
+            # Preenche serviços selecionados
             self.fields['servicos'].initial = self.instance.servicos.all()
 
-    # ... (métodos clean_data, clean_cep, clean_estado permanecem inalterados)
     def clean_data(self):
         data = self.cleaned_data.get('data')
         if data and data < date.today():
@@ -198,15 +198,15 @@ class AgendamentoForm(forms.ModelForm):
             raise ValidationError('Estado deve ter 2 caracteres (ex: SP, RJ).')
         return estado.upper()
     
-    # REMOVIDO o clean_horario, pois o horário agora é validado na View (por duração)
-    
-    # O método save() pode ser mantido simples aqui, pois a View faz o cálculo de duração e a conversão de horário
     def save(self, commit=True):
         agendamento = super().save(commit=False)
         servicos = self.cleaned_data['servicos']
-        # O cálculo de valor total é mantido aqui
+        
+        # O cálculo do valor total é feito no form antes de salvar
         agendamento.valor_total = sum(servico.preco for servico in servicos)
+        
         if commit:
             agendamento.save()
+            # Salva a relação ManyToMany
             agendamento.servicos.set(servicos)
         return agendamento

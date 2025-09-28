@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from datetime import timedelta, datetime # Adicionando importação ao topo
 
 class Pet(models.Model):
     TIPO_CHOICES = [
@@ -67,9 +68,14 @@ class Servico(models.Model):
     )
     duracao_minutos = models.PositiveIntegerField(
         verbose_name='Duração (minutos)',
-        default=30,  # Valor padrão razoável, pode ser ajustado no Admin
-        validators=[MinValueValidator(15)], # Duração mínima de 15 minutos
+        default=30,
+        validators=[MinValueValidator(15)],
         help_text="O tempo em minutos que este serviço leva para ser concluído."
+    )
+    imagem = models.ImageField(
+        upload_to='servicos_imagens/', 
+        null=True, 
+        blank=True
     )
     
     class Meta:
@@ -127,13 +133,13 @@ class Agendamento(models.Model):
     
     # Status e informações adicionais
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='agendado', verbose_name='Status')
-    motivo_cancelamento = models.TextField(blank=True, verbose_name='Motivo do Cancelamento')  # NOVO CAMPO
+    motivo_cancelamento = models.TextField(blank=True, verbose_name='Motivo do Cancelamento')
     observacoes = models.TextField(blank=True, verbose_name='Observações')
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
     
     def horario_fim(self):
-        from datetime import timedelta, datetime
+        # A importação de datetime/timedelta foi movida para o topo do arquivo
         dummy_date = datetime(2000, 1, 1)
         horario_dt = datetime.combine(dummy_date.date(), self.horario_inicio)
         horario_fim_dt = horario_dt + timedelta(minutes=self.duracao_total_minutos)
@@ -148,4 +154,6 @@ class Agendamento(models.Model):
         return f"{self.nome_pet} - {self.data} {self.horario_inicio}"
     
     def calcular_valor_total(self):
+        # O uso de self.servicos.all() força o Django a buscar os dados no banco.
+        # Poderia ser mais eficiente se já estivessem carregados.
         return sum(servico.preco for servico in self.servicos.all())

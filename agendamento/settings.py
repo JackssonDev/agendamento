@@ -1,40 +1,33 @@
 """
-Django settings for o seu projeto.
-Gerado pelo 'django-admin startproject' usando Django 5.2.6.
+Django settings for agendamento project.
 """
 
 from pathlib import Path
 import os
-import dj_database_url # <--- NOVO: Para configurar o PostgreSQL do Render
+import dj_database_url # Para configurar o PostgreSQL do Render
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
 # =================================================================
-# VARIÁVEIS DE AMBIENTE (PRODUÇÃO)
+# VARIÁVEIS DE AMBIENTE E SEGURANÇA (PRODUÇÃO)
 # =================================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Carrega a chave do Render. Se não encontrar (local), usa a chave local (segurança baixa)
-SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_secret_key_aqui')
+# Carrega a chave do Render. Se não encontrar (local), usa a chave local.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_secret_key_aqui_para_uso_local_apenas') 
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG será False no Render e True se a variável de ambiente DEBUG for 'True' (apenas para ambiente de staging/teste)
+# DEBUG será False no Render e True se a variável de ambiente DEBUG for 'True'.
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-
-# Permite o acesso do Render (qualquer subdomínio *.onrender.com)
+# Permite o acesso do Render
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
 
+# Redireciona todo tráfego para HTTPS (obrigatório em produção)
+SECURE_SSL_REDIRECT = True
 
 # Application definition
 
 INSTALLED_APPS = [
-    # Jazzmin deve ser o PRIMEIRO!
     'jazzmin', 
     
     'django.contrib.admin',
@@ -51,8 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # <--- NOVO: Adiciona Whitenoise para servir arquivos estáticos de forma eficiente
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Para servir estáticos em produção
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,25 +73,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'agendamento.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 # =================================================================
 # CONFIGURAÇÃO DE BANCO DE DADOS (POSTGRESQL PARA RENDER)
 # =================================================================
 
 DATABASES = {
     'default': dj_database_url.config(
-        # Render irá preencher a variável DATABASE_URL com a URL do PostgreSQL
         default='sqlite:///{}'.format(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600 # Tempo máximo de conexão (bom para produção)
+        conn_max_age=600
     )
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# =================================================================
+# VALIDAÇÃO DE SENHA E I18N
+# =================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -116,10 +103,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'America/Sao_Paulo'
@@ -128,41 +111,30 @@ USE_I18N = True
 
 USE_TZ = True
 
+# =================================================================
+# CONFIGURAÇÃO DE ARQUIVOS (STATIC E MEDIA)
+# =================================================================
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Configuração de Mídia (Upload de Imagens)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Necessário para o Django encontrar os arquivos estáticos
+# Configuração de Estáticos (CSS, JS)
 STATIC_URL = '/static/'
-
-# Diretório onde o collectstatic irá COPIAR todos os arquivos (Jazzmin, Admin, suas apps)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 
-# Diretórios onde você guarda arquivos estáticos globais do projeto (opcional)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# <--- NOVO: Configuração do Whitenoise para produção
-# Compacta e gerencia o cache dos arquivos estáticos para performance
+# Whitenoise para produção
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # =================================================================
-# CONFIGURAÇÕES DE SEGURANÇA (PRODUÇÃO)
-# =================================================================
-
-# Redireciona todo tráfego para HTTPS (obrigatório em produção)
-SECURE_SSL_REDIRECT = True
-
-# =================================================================
-# CONFIGURAÇÕES DO DJANGO JAZZMIN (Sem Alteração)
+# CONFIGURAÇÕES DO DJANGO JAZZMIN
 # =================================================================
 
 JAZZMIN_SETTINGS = {
@@ -189,10 +161,8 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     
-    # Tema (Experimente: 'darkly', 'cosmo', 'materia', 'united')
     "theme": "materia",  
     
-    # Cores (Use classes do Bootstrap)
     "navbar_classes": "navbar-dark bg-info",
     "sidebar_classes": "sidebar-light-primary", 
     "body_classes": "hold-transition sidebar-mini",
