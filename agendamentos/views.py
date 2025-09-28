@@ -11,6 +11,7 @@ from datetime import date, datetime, time, timedelta
 import json
 import urllib.request
 import json as json_lib
+from django.utils import timezone # <--- NOVO: Importa timezone para lidar com o horário do servidor
 
 # ==============================================================================
 # Funções de Auxílio para Agendamento por Duração
@@ -274,7 +275,7 @@ def agendar_servico(request):
     })
 
 # ==============================================================================
-# View de Disponibilidade (ALTERADA)
+# View de Disponibilidade (CORRIGIDA - Implementa Filtro de Horário Atual)
 # ==============================================================================
 
 def verificar_horarios_disponiveis(request):
@@ -287,26 +288,47 @@ def verificar_horarios_disponiveis(request):
         return JsonResponse({'error': 'Data e serviços são obrigatórios para verificar a disponibilidade'}, status=400)
     
     try:
+        # 1. Preparação de Data e Hora
         data_obj = date.fromisoformat(data)
         
-        # 1. Calcular a duração potencial do NOVO agendamento
+        # Obtém o horário atual do servidor no fuso horário configurado no settings.py
+        agora_local = timezone.localtime(timezone.now())
+        hoje = agora_local.date()
+        
+        # Define a hora limite para agendamento (hora atual arredondada para baixo, mais 15 minutos)
+        # Ex: Se são 10:50, o primeiro slot deve ser 11:00.
+        # Se são 10:56 (seu horário atual), o primeiro slot deve ser 11:00.
+        hora_minima_para_agendar = agora_local + timedelta(minutes=15)
+        
+        # 2. Calcular a duração potencial do NOVO agendamento
         servicos_ids = [int(sid) for sid in servicos_ids_str.split(',') if sid]
         duracao_novo_agendamento = calcular_duracao_total(servicos_ids)
         
         horarios_possiveis = gerar_horarios_possiveis(intervalo_minutos=15)
         horarios_disponiveis = []
         
-        # 2. Buscar agendamentos existentes no dia
+        # 3. Buscar agendamentos existentes no dia
         agendamentos_dia = Agendamento.objects.filter(
             data=data_obj,
             status__in=['agendado', 'confirmado']
         )
         
-        # 3. Iterar por cada horário possível (slots de 15 minutos)
+        # 4. Iterar por cada horário possível (slots de 15 minutos)
         for horario_str in horarios_possiveis:
             
+            slot_time = datetime.strptime(horario_str, '%H:%M').time()
+            
+            # --- NOVO FILTRO DE TEMPO PASSADO ---
+            if data_obj == hoje:
+                # Converte o horário do slot para um objeto datetime completo para comparação
+                slot_dt_completo = datetime.combine(data_obj, slot_time)
+                # O horário do slot deve ser maior ou igual à hora mínima de agendamento de hoje
+                if slot_dt_completo < hora_minima_para_agendar.replace(second=0, microsecond=0):
+                    continue # Pula o slot se ele já passou
+            # ------------------------------------
+            
             # Slot que o usuário está tentando reservar (início e fim)
-            slot_inicio_dt = datetime.combine(data_obj, datetime.strptime(horario_str, '%H:%M').time())
+            slot_inicio_dt = datetime.combine(data_obj, slot_time)
             slot_fim_dt = slot_inicio_dt + timedelta(minutes=duracao_novo_agendamento)
             
             is_livre = True
