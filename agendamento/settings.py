@@ -4,7 +4,8 @@ Gerado pelo 'django-admin startproject' usando Django 5.2.6.
 """
 
 from pathlib import Path
-import os # Necessário para STATIC_ROOT
+import os
+import dj_database_url # <--- NOVO: Para configurar o PostgreSQL do Render
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,13 +14,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# =================================================================
+# VARIÁVEIS DE AMBIENTE (PRODUÇÃO)
+# =================================================================
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'sua_secret_key_aqui' # Mantenha sua chave secreta original aqui!
+# Carrega a chave do Render. Se não encontrar (local), usa a chave local (segurança baixa)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_secret_key_aqui')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG será False no Render e True se a variável de ambiente DEBUG for 'True' (apenas para ambiente de staging/teste)
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost'] # Adicione outros hosts se necessário
+
+# Permite o acesso do Render (qualquer subdomínio *.onrender.com)
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
 
 
 # Application definition
@@ -42,6 +51,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # <--- NOVO: Adiciona Whitenoise para servir arquivos estáticos de forma eficiente
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -50,12 +61,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'agendamento.urls' # Ajuste 'agendamento' para o nome do seu projeto principal se for diferente
+ROOT_URLCONF = 'agendamento.urls' 
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'], # Adicione a pasta global 'templates' se você a tiver
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,17 +79,22 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'agendamento.wsgi.application' # Ajuste 'agendamento' para o nome do seu projeto principal se for diferente
+WSGI_APPLICATION = 'agendamento.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# =================================================================
+# CONFIGURAÇÃO DE BANCO DE DADOS (POSTGRESQL PARA RENDER)
+# =================================================================
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        # Render irá preencher a variável DATABASE_URL com a URL do PostgreSQL
+        default='sqlite:///{}'.format(BASE_DIR / 'db.sqlite3'),
+        conn_max_age=600 # Tempo máximo de conexão (bom para produção)
+    )
 }
 
 
@@ -106,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'America/Sao_Paulo' # Use o fuso horário correto para o Brasil
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -120,13 +136,16 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Diretório onde o collectstatic irá COPIAR todos os arquivos (Jazzmin, Admin, suas apps)
-# CORREÇÃO PARA O ERRO ImproperlyConfigured
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 
 # Diretórios onde você guarda arquivos estáticos globais do projeto (opcional)
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+# <--- NOVO: Configuração do Whitenoise para produção
+# Compacta e gerencia o cache dos arquivos estáticos para performance
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Default primary key field type
@@ -136,7 +155,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # =================================================================
-# CONFIGURAÇÕES DO DJANGO JAZZMIN
+# CONFIGURAÇÕES DE SEGURANÇA (PRODUÇÃO)
+# =================================================================
+
+# Redireciona todo tráfego para HTTPS (obrigatório em produção)
+SECURE_SSL_REDIRECT = True
+
+# =================================================================
+# CONFIGURAÇÕES DO DJANGO JAZZMIN (Sem Alteração)
 # =================================================================
 
 JAZZMIN_SETTINGS = {
@@ -167,15 +193,14 @@ JAZZMIN_SETTINGS = {
     "theme": "materia",  
     
     # Cores (Use classes do Bootstrap)
-    "navbar_classes": "navbar-dark bg-info", # Azul claro (pode ser bg-primary, bg-purple, etc.)
+    "navbar_classes": "navbar-dark bg-info",
     "sidebar_classes": "sidebar-light-primary", 
     "body_classes": "hold-transition sidebar-mini",
     
-    "search_model": "agendamentos.agendamento", # Permite buscar agendamentos pelo campo __str__
+    "search_model": "agendamentos.agendamento",
 }
 
 JAZZMIN_UI_TWEAKS = {
-    # Customização fina da interface (opcional)
     "navbar_small_text": False,
     "footer_small_text": False,
     "sidebar_fixed": True,
