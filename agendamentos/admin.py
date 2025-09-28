@@ -21,7 +21,7 @@ class ServicoAdmin(admin.ModelAdmin):
 
 @admin.register(Agendamento)
 class AgendamentoAdmin(admin.ModelAdmin):
-    list_display = ['nome_pet', 'data', 'horario', 'status', 'nome_tutor', 'valor_total']
+    list_display = ['nome_pet', 'data', 'horario_inicio', 'status', 'nome_tutor', 'valor_total']
     list_filter = ['status', 'data', 'servicos', 'tipo_pet', 'forma_pagamento']
     search_fields = ['nome_pet', 'nome_tutor', 'rua', 'bairro', 'cidade']
     readonly_fields = ['data_criacao', 'data_atualizacao']

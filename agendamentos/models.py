@@ -65,6 +65,12 @@ class Servico(models.Model):
         default='fas fa-paw',
         help_text="Ex: fas fa-dog, fas fa-cat, fas fa-syringe"
     )
+    duracao_minutos = models.PositiveIntegerField(
+        verbose_name='Duração (minutos)',
+        default=30,  # Valor padrão razoável, pode ser ajustado no Admin
+        validators=[MinValueValidator(15)], # Duração mínima de 15 minutos
+        help_text="O tempo em minutos que este serviço leva para ser concluído."
+    )
     
     class Meta:
         verbose_name = 'Serviço'
@@ -75,17 +81,6 @@ class Servico(models.Model):
         return f"{self.nome} - R$ {self.preco}"
 
 class Agendamento(models.Model):
-    HORARIOS_DISPONIVEIS = [
-        ('08:00', '08:00'),
-        ('09:00', '09:00'),
-        ('10:00', '10:00'),
-        ('11:00', '11:00'),
-        ('14:00', '14:00'),
-        ('15:00', '15:00'),
-        ('16:00', '16:00'),
-        ('17:00', '17:00'),
-    ]
-    
     STATUS_CHOICES = [
         ('agendado', 'Agendado'),
         ('confirmado', 'Confirmado'),
@@ -111,7 +106,11 @@ class Agendamento(models.Model):
     nome_pet = models.CharField(max_length=100, verbose_name='Nome do Pet')
     tipo_pet = models.CharField(max_length=20, verbose_name='Tipo do Pet')
     data = models.DateField(verbose_name='Data do Agendamento')
-    horario = models.CharField(max_length=5, choices=HORARIOS_DISPONIVEIS, verbose_name='Horário')
+    horario_inicio = models.TimeField(verbose_name='Horário de Início')
+    duracao_total_minutos = models.PositiveIntegerField(
+        default=30, 
+        verbose_name='Duração Total (minutos)'
+    )
     
     # Endereço
     cep = models.CharField(max_length=9, verbose_name='CEP')
@@ -133,13 +132,20 @@ class Agendamento(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
     
+    def horario_fim(self):
+        from datetime import timedelta, datetime
+        dummy_date = datetime(2000, 1, 1)
+        horario_dt = datetime.combine(dummy_date.date(), self.horario_inicio)
+        horario_fim_dt = horario_dt + timedelta(minutes=self.duracao_total_minutos)
+        return horario_fim_dt.time()
+    
     class Meta:
         verbose_name = 'Agendamento'
         verbose_name_plural = 'Agendamentos'
-        ordering = ['-data', 'horario']
+        ordering = ['-data', 'horario_inicio']
     
     def __str__(self):
-        return f"{self.nome_pet} - {self.data} {self.horario}"
+        return f"{self.nome_pet} - {self.data} {self.horario_inicio}"
     
     def calcular_valor_total(self):
         return sum(servico.preco for servico in self.servicos.all())

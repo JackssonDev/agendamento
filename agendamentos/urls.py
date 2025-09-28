@@ -19,7 +19,7 @@ urlpatterns = [
     # Agendamentos
     path('meus-agendamentos/', views.meus_agendamentos, name='meus_agendamentos'),
     path('agendar-servico/', views.agendar_servico, name='agendar_servico'),
-    path('verificar-horarios/', views.verificar_horarios_disponiveis, name='verificar_horarios'),
+    path('verificar-horarios-disponiveis/', views.verificar_horarios_disponiveis, name='verificar_horarios_disponiveis'),
     path('consultar-cep/', views.consultar_cep, name='consultar_cep'),
 
     # Editar e Cancelar agendamento

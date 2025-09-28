@@ -7,6 +7,10 @@ from django.core.exceptions import ValidationError
 from datetime import date
 import re
 
+# ==============================================================================
+# Classes CustomUserCreationForm, CustomAuthenticationForm e PetForm permanecem inalteradas
+# ==============================================================================
+
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
@@ -96,23 +100,42 @@ class DadosPessoaisForm(forms.ModelForm):
             raise ValidationError('Telefone deve ter 10 ou 11 dígitos.')
         return telefone
 
+# ==============================================================================
+# CLASSE AGENDAMENTO FORM (ALTERADA)
+# ==============================================================================
+
 class AgendamentoForm(forms.ModelForm):
-    servicos = forms.ModelMultipleChoiceField(queryset=Servico.objects.filter(ativo=True), widget=forms.CheckboxSelectMultiple(), label='Serviços *')
+    servicos = forms.ModelMultipleChoiceField(
+        queryset=Servico.objects.filter(ativo=True), 
+        widget=forms.CheckboxSelectMultiple(), 
+        label='Serviços *'
+    )
+    
+    # NOVO CAMPO DE HORÁRIO: Renomeado para 'horario_inicio' e removido o Select estático
+    # Usamos um ChoiceField, mas ele será populado com as opções vindas do JS (vazio por padrão)
+    horario_inicio = forms.CharField(
+        required=True,
+        label='Horário de Início',
+        max_length=5,
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'horario-select', 'disabled': 'disabled'})
+    )
 
     class Meta:
         model = Agendamento
         fields = [
             'servicos', 'pet', 'nome_tutor', 'nome_pet', 'tipo_pet',
-            'data', 'horario', 'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado', 
+            'data', 'horario_inicio', 'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado', 
             'complemento', 'forma_pagamento', 'observacoes'
         ]
+        # O campo 'horario' original foi substituído por 'horario_inicio' no fields acima
         widgets = {
             'pet': forms.Select(attrs={'class': 'form-select'}),
             'nome_tutor': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo do tutor'}),
             'nome_pet': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do pet'}),
             'tipo_pet': forms.Select(attrs={'class': 'form-select'}),
-            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'min': date.today().isoformat()}),
-            'horario': forms.Select(attrs={'class': 'form-select'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'min': date.today().isoformat(), 'id': 'data-agendamento'}),
+            # O campo 'horario' antigo (que era forms.Select) foi removido dos widgets.
+            # O novo campo 'horario_inicio' usa o widget definido acima (forms.Select)
             'cep': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '00000-000', 'id': 'cep'}),
             'rua': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da rua', 'id': 'rua'}),
             'numero': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Número', 'id': 'numero'}),
@@ -123,15 +146,14 @@ class AgendamentoForm(forms.ModelForm):
             'forma_pagamento': forms.Select(attrs={'class': 'form-select', 'id': 'forma_pagamento'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Observações adicionais (opcional)', 'rows': 3}),
         }
-
+        
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Filtra pets do usuário
+        # ... (código para filtrar pets e preencher campos iniciais permanece inalterado)
         if self.user and self.user.is_authenticated:
             self.fields['pet'].queryset = Pet.objects.filter(dono=self.user)
-            # Preenche automaticamente nome do tutor se houver perfil
             try:
                 perfil = self.user.perfil
                 if not self.initial.get('nome_tutor'):
@@ -142,17 +164,22 @@ class AgendamentoForm(forms.ModelForm):
             self.fields['pet'].queryset = Pet.objects.none()
 
         # Preenche tipo de pet
-        self.fields['tipo_pet'].widget.choices = [('', 'Selecione o tipo...')] + Agendamento.TIPO_PET_CHOICES if hasattr(Agendamento, 'TIPO_PET_CHOICES') else [
-            ('cachorro', 'Cachorro'),
-            ('gato', 'Gato'),
-            ('passaro', 'Pássaro'),
-            ('roedor', 'Roedor'),
-            ('outro', 'Outro'),
-        ]
+        self.fields['tipo_pet'].widget.choices = [('', 'Selecione o tipo...')] + Pet.TIPO_CHOICES # Usando Pet.TIPO_CHOICES do models.py para consistência
 
         # Preenche forma de pagamento
         self.fields['forma_pagamento'].widget.choices = [('', 'Selecione a forma de pagamento...')] + Agendamento.FORMA_PAGAMENTO_CHOICES
+        
+        # Se for um formulário de edição, preenche o horário inicial (TimeField)
+        if self.instance and self.instance.pk:
+            # Se for edição, o TimeField precisa ser formatado para ser carregado corretamente no campo
+            if self.instance.horario_inicio:
+                self.fields['horario_inicio'].initial = self.instance.horario_inicio.strftime('%H:%M')
+                self.fields['horario_inicio'].widget.attrs.pop('disabled', None)
+            
+            # Popula a lista de serviços selecionados (para edição)
+            self.fields['servicos'].initial = self.instance.servicos.all()
 
+    # ... (métodos clean_data, clean_cep, clean_estado permanecem inalterados)
     def clean_data(self):
         data = self.cleaned_data.get('data')
         if data and data < date.today():
@@ -170,10 +197,14 @@ class AgendamentoForm(forms.ModelForm):
         if estado and len(estado) != 2:
             raise ValidationError('Estado deve ter 2 caracteres (ex: SP, RJ).')
         return estado.upper()
-
+    
+    # REMOVIDO o clean_horario, pois o horário agora é validado na View (por duração)
+    
+    # O método save() pode ser mantido simples aqui, pois a View faz o cálculo de duração e a conversão de horário
     def save(self, commit=True):
         agendamento = super().save(commit=False)
         servicos = self.cleaned_data['servicos']
+        # O cálculo de valor total é mantido aqui
         agendamento.valor_total = sum(servico.preco for servico in servicos)
         if commit:
             agendamento.save()

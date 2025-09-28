@@ -1,19 +1,34 @@
-# Python
+# Byte-code files
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+# Cache de testes
+.pytest_cache/
 
-# Django
+# Banco de dados local
 db.sqlite3
-*.log
-media/
-staticfiles/
+*.sqlite3
 
-# Environments
+# Arquivos de log
+*.log
+
+# Arquivos estáticos gerados (collectstatic)
+/staticfiles/
+# Mídia de usuário (arquivos carregados)
+/media/
+
+# Ambientes virtuais
 .env
 .venv
 venv/
 env/
 
-# IDEs
+# Arquivos de pacote
+dist/
+build/
+
 .vscode/
 .idea/
+.DS_Store

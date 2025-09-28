@@ -27,10 +27,25 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    
                     <p class="card-text">
-                        <strong>Serviço:</strong> {{ agendamento.servico.nome }}<br>
+                        <strong>Serviço(s):</strong> 
+                        {% for servico in agendamento.servicos.all %}
+                            {{ servico.nome }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Nenhum serviço selecionado.
+                        {% endfor %}
+                    </p>
+
+                    <p class="card-text">
                         <strong>Data:</strong> {{ agendamento.data|date:"d/m/Y" }}<br>
-                        <strong>Horário:</strong> {{ agendamento.horario }}<br>
+                        
+                        <strong>Horário:</strong> {{ agendamento.horario_inicio|date:"H:i" }} 
+                        {% if agendamento.duracao_total_minutos %}
+                            ({{ agendamento.duracao_total_minutos }} min.)
+                        {% endif %}
+                        <br>
+                        
                         <strong>Endereço:</strong> {{ agendamento.rua }}, {{ agendamento.numero }} - {{ agendamento.bairro }}<br>
                         {% if agendamento.complemento %}
                         <strong>Complemento:</strong> {{ agendamento.complemento }}<br>
@@ -49,12 +64,10 @@
                         {% if agendamento.status == 'agendado' %}
                         <div class="d-flex gap-2">
                         
-                            <!-- Botão Editar -->
                             <a href="{% url 'editar_agendamento' agendamento.id %}" class="btn btn-sm btn-outline-primary">
                                 <i class="fas fa-edit"></i> Editar
                             </a>
 
-                            <!-- Botão Cancelar abre modal -->
                             <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ agendamento.id }}">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
@@ -65,7 +78,6 @@
             </div>
         </div>
 
-        <!-- Modal Cancelamento -->
         <div class="modal fade" id="cancelModal{{ agendamento.id }}" tabindex="-1" aria-labelledby="cancelModalLabel{{ agendamento.id }}" aria-hidden="true">
           <div class="modal-dialog">
             <form method="POST" action="{% url 'cancelar_agendamento' agendamento.id %}">
@@ -110,7 +122,8 @@
     background-color: #9E7B8A !important;
 }
 .card {
-    border-radius: 12px;
+    border-radius:
+ 12px;
     border: none;
 }
 .card-header {

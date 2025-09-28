@@ -7,10 +7,100 @@ from django.contrib.auth.decorators import login_required
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, PetForm, DadosPessoaisForm, AgendamentoForm
 from .models import Pet, PerfilUsuario, Servico, Agendamento
 from django.http import JsonResponse
-from datetime import date
+from datetime import date, datetime, time, timedelta
 import json
 import urllib.request
 import json as json_lib
+
+# ==============================================================================
+# Funções de Auxílio para Agendamento por Duração
+# ==============================================================================
+
+def calcular_duracao_total(servicos_ids):
+    """Calcula a duração total em minutos somando a duração de todos os serviços."""
+    
+    # 1. Converte as IDs (strings) para inteiros
+    servicos_ids = [int(sid) for sid in servicos_ids if sid]
+    
+    # 2. Busca e soma a duração_minutos dos serviços
+    duracao_soma = sum(
+        Servico.objects.filter(id=sid).values_list('duracao_minutos', flat=True).first() or 0 
+        for sid in servicos_ids
+    )
+    
+    # 3. Retorna a duração mínima de 15 minutos, caso a soma seja menor
+    return max(15, duracao_soma)
+
+def gerar_horarios_possiveis(intervalo_minutos=15):
+    """
+    Gera uma lista de strings de horário ('HH:MM') em um intervalo de 15 minutos, 
+    excluindo o horário de almoço.
+    """
+    horarios = []
+    # Define o horário de início (8:00) e fim (18:00) do dia de trabalho
+    inicio = datetime.strptime("08:00", "%H:%M")
+    fim = datetime.strptime("18:00", "%H:%M")
+    
+    # Intervalo de almoço
+    almoco_inicio = datetime.strptime("12:00", "%H:%M")
+    almoco_fim = datetime.strptime("14:00", "%H:%M")
+
+    current = inicio
+    while current < fim:
+        # Pula o intervalo de almoço
+        if current >= almoco_inicio and current < almoco_fim:
+            current += timedelta(minutes=intervalo_minutos)
+            continue
+            
+        horarios.append(current.strftime("%H:%M"))
+        current += timedelta(minutes=intervalo_minutos)
+        
+    return horarios
+
+def is_slot_livre(data_agendamento, horario_inicio_str, duracao_minutos, agendamento_id=None):
+    """
+    Verifica se o intervalo completo (inicio + duração) está livre,
+    considerando agendamentos existentes.
+    """
+    
+    # Converte horário de início (string 'HH:MM') para objeto datetime completo
+    horario_inicio_dt = datetime.strptime(horario_inicio_str, '%H:%M')
+    horario_inicio_completo = datetime.combine(data_agendamento, horario_inicio_dt.time())
+    
+    # Calcular o horário de fim do novo agendamento
+    horario_fim_agendamento = horario_inicio_completo + timedelta(minutes=duracao_minutos)
+    
+    # 1. Buscar agendamentos existentes no mesmo dia (excluindo o que está sendo editado, se for o caso)
+    agendamentos_dia = Agendamento.objects.filter(
+        data=data_agendamento,
+        status__in=['agendado', 'confirmado']
+    )
+    if agendamento_id:
+        agendamentos_dia = agendamentos_dia.exclude(id=agendamento_id)
+    
+    # 2. Checar conflito com cada agendamento existente
+    for agendamento in agendamentos_dia:
+        
+        # Início do agendamento existente (TimeField + Data)
+        agendamento_inicio = datetime.combine(data_agendamento, agendamento.horario_inicio)
+        
+        # Fim do agendamento existente (Início + Duração)
+        agendamento_fim = agendamento_inicio + timedelta(minutes=agendamento.duracao_total_minutos)
+
+        # Lógica de Conflito: O novo agendamento se sobrepõe ao existente
+        conflito = (
+            (horario_inicio_completo < agendamento_fim) and 
+            (horario_fim_agendamento > agendamento_inicio)
+        )
+
+        if conflito:
+            return False  # Slot OCUPADO
+            
+    return True # Slot LIVRE
+
+# ==============================================================================
+# Views Existentes (com alterações na lógica de agendamento)
+# ==============================================================================
 
 def home(request):
     servicos = Servico.objects.filter(ativo=True)[:5]
@@ -47,7 +137,8 @@ def logout_view(request):
 
 @login_required
 def meus_agendamentos(request):
-    agendamentos = Agendamento.objects.filter(usuario=request.user).order_by('-data', 'horario')
+    # Alterado 'horario' para 'horario_inicio' na ordenação
+    agendamentos = Agendamento.objects.filter(usuario=request.user).order_by('-data', 'horario_inicio') 
     return render(request, 'agendamentos/meus_agendamentos.html', {'agendamentos': agendamentos})
 
 @login_required
@@ -116,12 +207,44 @@ def dados_pessoais(request):
     
     return render(request, 'agendamentos/dados_pessoais.html', {'form': form})
 
+# ==============================================================================
+# View de Agendamento (ALTERADA)
+# ==============================================================================
+
 def agendar_servico(request):
     if request.method == 'POST':
+        # Instanciar o formulário para validação inicial de dados
         form = AgendamentoForm(request.POST, user=request.user if request.user.is_authenticated else None)
+        
+        # Capturar os dados brutos antes de validar o formulário
+        servicos_ids = request.POST.getlist('servicos') # IDs dos serviços
+        horario_inicio_str = request.POST.get('horario_inicio')
+        data_str = request.POST.get('data')
+
         if form.is_valid():
+            
+            # 1. CÁLCULO DA DURAÇÃO
+            duracao_total = calcular_duracao_total(servicos_ids)
+            
+            try:
+                data_agendamento = date.fromisoformat(data_str)
+            except ValueError:
+                messages.error(request, "Data inválida.")
+                return redirect('agendar_servico')
+            
+            # 2. VALIDAÇÃO DE CONFLITO
+            if not is_slot_livre(data_agendamento, horario_inicio_str, duracao_total):
+                messages.error(request, f"O horário selecionado ({horario_inicio_str}) está ocupado pelo período de {duracao_total} minutos. Escolha outro horário.")
+                return redirect('agendar_servico')
+            
+            # 3. SALVAR O AGENDAMENTO (com novos campos)
             agendamento = form.save(commit=False)
             
+            # Preenche os campos de duração e horário de início
+            agendamento.duracao_total_minutos = duracao_total
+            agendamento.horario_inicio = datetime.strptime(horario_inicio_str, '%H:%M').time()
+            
+            # Código original de autenticação do usuário
             if request.user.is_authenticated:
                 agendamento.usuario = request.user
                 pet = form.cleaned_data.get('pet')
@@ -131,8 +254,9 @@ def agendar_servico(request):
             agendamento.save()
             form.save_m2m()
             
-            messages.success(request, f'Agendamento realizado com sucesso para {agendamento.data} às {agendamento.horario}!')
+            messages.success(request, f'Agendamento realizado com sucesso para {agendamento.data} das {horario_inicio_str} até {agendamento.horario_fim().strftime("%H:%M")}!')
             return redirect('home')
+        
     else:
         form = AgendamentoForm(user=request.user if request.user.is_authenticated else None)
     
@@ -149,27 +273,65 @@ def agendar_servico(request):
         'pets_json': json.dumps(pets_json)
     })
 
+# ==============================================================================
+# View de Disponibilidade (ALTERADA)
+# ==============================================================================
+
 def verificar_horarios_disponiveis(request):
     data = request.GET.get('data')
+    # O frontend precisa enviar uma string de IDs separados por vírgula (ex: "1,3,4")
+    servicos_ids_str = request.GET.get('servicos_ids', '')
     
-    if not data:
-        return JsonResponse({'error': 'Data é obrigatória'}, status=400)
+    if not data or not servicos_ids_str:
+        # Se os serviços não foram selecionados, não podemos calcular a duração
+        return JsonResponse({'error': 'Data e serviços são obrigatórios para verificar a disponibilidade'}, status=400)
     
     try:
         data_obj = date.fromisoformat(data)
-        horarios_disponiveis = [h[0] for h in Agendamento.HORARIOS_DISPONIVEIS]
         
-        horarios_ocupados = Agendamento.objects.filter(
+        # 1. Calcular a duração potencial do NOVO agendamento
+        servicos_ids = [int(sid) for sid in servicos_ids_str.split(',') if sid]
+        duracao_novo_agendamento = calcular_duracao_total(servicos_ids)
+        
+        horarios_possiveis = gerar_horarios_possiveis(intervalo_minutos=15)
+        horarios_disponiveis = []
+        
+        # 2. Buscar agendamentos existentes no dia
+        agendamentos_dia = Agendamento.objects.filter(
             data=data_obj,
             status__in=['agendado', 'confirmado']
-        ).values_list('horario', flat=True)
+        )
         
-        horarios_disponiveis = [h for h in horarios_disponiveis if h not in horarios_ocupados]
+        # 3. Iterar por cada horário possível (slots de 15 minutos)
+        for horario_str in horarios_possiveis:
+            
+            # Slot que o usuário está tentando reservar (início e fim)
+            slot_inicio_dt = datetime.combine(data_obj, datetime.strptime(horario_str, '%H:%M').time())
+            slot_fim_dt = slot_inicio_dt + timedelta(minutes=duracao_novo_agendamento)
+            
+            is_livre = True
+            
+            # Verifica se o NOVO slot completo se sobrepõe a qualquer agendamento existente
+            for agendamento in agendamentos_dia:
+                agendamento_inicio = datetime.combine(data_obj, agendamento.horario_inicio)
+                agendamento_fim = agendamento_inicio + timedelta(minutes=agendamento.duracao_total_minutos)
+
+                conflito = (
+                    (slot_inicio_dt < agendamento_fim) and 
+                    (slot_fim_dt > agendamento_inicio)
+                )
+
+                if conflito:
+                    is_livre = False
+                    break 
+                    
+            if is_livre:
+                horarios_disponiveis.append(horario_str)
         
         return JsonResponse({'horarios_disponiveis': horarios_disponiveis})
     
     except ValueError:
-        return JsonResponse({'error': 'Data inválida'}, status=400)
+        return JsonResponse({'error': 'Data ou formato de serviço inválido'}, status=400)
 
 def consultar_cep(request):
     cep = request.GET.get('cep', '').replace('-', '')
@@ -198,7 +360,7 @@ def consultar_cep(request):
         return JsonResponse({'error': 'Erro ao consultar CEP: ' + str(e)}, status=500)
 
 # ===========================
-# NOVAS FUNÇÕES: Editar e Cancelar Agendamento
+# NOVAS FUNÇÕES: Editar e Cancelar Agendamento (MUDANÇAS MÍNIMAS)
 # ===========================
 
 @login_required
@@ -207,14 +369,42 @@ def editar_agendamento(request, agendamento_id):
 
     if request.method == 'POST':
         form = AgendamentoForm(request.POST, instance=agendamento, user=request.user)
+        
+        # Capturar os dados brutos
+        servicos_ids = request.POST.getlist('servicos') 
+        horario_inicio_str = request.POST.get('horario_inicio')
+        data_str = request.POST.get('data')
+
         if form.is_valid():
-            form.save()
+            # 1. CÁLCULO DA DURAÇÃO
+            duracao_total = calcular_duracao_total(servicos_ids)
+            
+            try:
+                data_agendamento = date.fromisoformat(data_str)
+            except ValueError:
+                messages.error(request, "Data inválida.")
+                return redirect('meus_agendamentos')
+                
+            # 2. VALIDAÇÃO DE CONFLITO (incluindo a ID para ignorar o próprio agendamento)
+            if not is_slot_livre(data_agendamento, horario_inicio_str, duracao_total, agendamento_id=agendamento.id):
+                messages.error(request, f"O horário selecionado ({horario_inicio_str}) está ocupado pelo período de {duracao_total} minutos. Escolha outro horário.")
+                return redirect('meus_agendamentos')
+
+            # 3. SALVAR (com novos campos)
+            agendamento = form.save(commit=False)
+            agendamento.duracao_total_minutos = duracao_total
+            agendamento.horario_inicio = datetime.strptime(horario_inicio_str, '%H:%M').time()
+            agendamento.save()
+            form.save_m2m() # Salva a relação de serviços
+
             messages.success(request, 'Agendamento atualizado com sucesso!')
             return redirect('meus_agendamentos')
     else:
+        # Se for GET, o horário no form deve ser o TimeField
+        # O campo 'horario' no form deve ser preenchido corretamente pelo Django
         form = AgendamentoForm(instance=agendamento, user=request.user)
 
-    # Monta os pets em JSON para o JS do template (mesmo que no cadastro)
+    # Monta os pets em JSON para o JS do template
     pets_json = []
     if request.user.is_authenticated:
         pets = Pet.objects.filter(dono=request.user)
@@ -226,7 +416,7 @@ def editar_agendamento(request, agendamento_id):
         'form': form,
         'servicos': servicos,
         'pets_json': json.dumps(pets_json),
-        'editar': True,  # Podemos usar no template para mostrar "Editar Agendamento"
+        'editar': True,
         'agendamento': agendamento
     })
 
