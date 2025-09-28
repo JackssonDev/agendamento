@@ -309,8 +309,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // NOVO CÓDIGO PARA LÓGICA DE AGENDAMENTO POR DURAÇÃO
     // =================================================================
 
-    const dataInput = document.getElementById('data-agendamento');
-    const horarioSelect = document.getElementById('horario-select');
+    const dataInput = document.getElementById('{{ form.data.id_for_label }}');
+    const horarioSelect = document.getElementById('{{ form.horario_inicio.id_for_label }}');
     const loadingDiv = document.getElementById('loading-horarios');
     const infoDiv = document.getElementById('horarios-info');
 
