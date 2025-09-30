@@ -41,14 +41,14 @@ Siga os passos abaixo para configurar o projeto em sua máquina local.
 ### 1. Pré-requisitos
 
 Certifique-se de ter instalado:
-* [Python 3.10+](https://www.python.org/downloads/)
+* [Python 3.10+](https://www.python.org/)
 * [Git](https://git-scm.com/downloads)
 
 ### 2. Clonagem e Configuração do Ambiente
 
 ```bash
 # 1. Clone o repositório
-git clone [https://github.com/jacksonpr74-sketch/agendamento]
+git clone [https://github.com/jacksonpr74-sketch/agendamento](https://github.com/jacksonpr74-sketch/agendamento)
 cd agendamento
 
 # 2. Crie e ative o ambiente virtual
@@ -58,18 +58,21 @@ source venv/bin/activate  # No Windows, use: venv\Scripts\activate
 # 3. Instale as dependências
 pip install -r requirements.txt
 
-3. Variáveis de Ambiente
-Crie um arquivo chamado .env na raiz do projeto e preencha com suas chaves (você pode copiar as chaves do .env.example):
 
-Snippet de código
+### 3. Variáveis de Ambiente
 
+Crie um arquivo chamado **`.env`** na raiz do projeto e preencha com suas chaves (você pode copiar as chaves do `.env.example`):
+
+```env
 # Exemplo de .env
 SECRET_KEY='sua_chave_secreta_aqui'
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
-4. Inicialização do Banco de Dados e Superusuário
-Bash
 
+
+### 4. Inicialização do Banco de Dados e Superusuário
+
+```bash
 # 1. Aplique as migrações (cria o banco de dados SQLite)
 python manage.py migrate
 
@@ -79,18 +82,29 @@ python manage.py createsuperuser
 # 3. (Opcional) Popule o banco com serviços de exemplo (se você tiver um comando 'seed')
 # python manage.py seed_services
 
-5. Iniciar o Servidor
-Bash
 
+### 5. Iniciar o Servidor
+
+```bash
 python manage.py runserver
+
 Abra seu navegador em http://127.0.0.1:8000/.
 
-☁️ Deploy
-Este projeto está configurado para deploy contínuo na plataforma Render, utilizando PostgreSQL como banco de dados de produção. Os arquivos Procfile, apt-packages e o settings.py foram preparados para este ambiente.
 
-🤝 Autor
-[Jackson Pereira Ribeiro]	[Student/Web Developer]
-LinkedIn: [https://github.com/jacksonpr74-sketch]	GitHub: @JackssonDev
+---
+## ☁️ Deploy
 
-📄 Licença
-Este projeto está sob a licença MIT.
+Este projeto está configurado para **deploy contínuo** na plataforma **Render**, utilizando **PostgreSQL** como banco de dados de produção. Os arquivos de configuração essenciais (`Procfile`, `apt-packages` e `settings.py`) foram preparados para este ambiente, garantindo uma implantação rápida e eficiente.
+
+
+---
+## 🤝 Autor
+
+| Jackson Pereira Ribeiro | Student/Web Developer |
+| :--- | :--- |
+| **LinkedIn:** [Jackson Pereira Ribeiro](Link para o seu LinkedIn) | **GitHub:** [@JackssonDev](https://github.com/JackssonDev) |
+
+---
+## 📄 Licença
+
+Este projeto está sob a licença [MIT](https://opensource.org/licenses/MIT).
