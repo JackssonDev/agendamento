@@ -48,8 +48,8 @@ Certifique-se de ter instalado:
 
 ```bash
 # 1. Clone o repositório
-git clone [https://www.youtube.com/shorts/apr341idq8U](https://www.youtube.com/shorts/apr341idq8U)
-cd petcare-agendamento
+git clone [https://github.com/jacksonpr74-sketch/agendamento]
+cd agendamento
 
 # 2. Crie e ative o ambiente virtual
 python3 -m venv venv
