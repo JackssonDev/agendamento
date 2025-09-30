@@ -48,7 +48,7 @@ Certifique-se de ter instalado:
 
 ```bash
 # 1. Clone o repositório
-git clone [https://github.com/jacksonpr74-sketch/agendamento](https://github.com/jacksonpr74-sketch/agendamento)
+git clone https://github.com/JackssonDev/agendamento
 cd agendamento
 
 # 2. Crie e ative o ambiente virtual
