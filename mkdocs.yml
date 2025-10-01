@@ -22,6 +22,7 @@ theme:
 # ----------------------------------------------------
 plugins:
   - search
+  - mermaid2
   # Remova 'privacy' se não for usar.
 
 markdown_extensions:

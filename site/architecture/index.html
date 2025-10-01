@@ -543,25 +543,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#arquitetura-do-sistema-e-modelagem" class="md-nav__link">
-    <span class="md-ellipsis">
-      📐 Arquitetura do Sistema e Modelagem
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📐 Arquitetura do Sistema e Modelagem">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-estrutura-do-projeto-diretorios-e-arquivos" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Estrutura do Projeto (Diretórios e Arquivos)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#2-modelos-de-dados-erd-simplificado" class="md-nav__link">
     <span class="md-ellipsis">
       2. Modelos de Dados (ERD Simplificado)
@@ -569,8 +550,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#3-arquitetura-do-sistema-fluxo-de-dados" class="md-nav__link">
     <span class="md-ellipsis">
       3. Arquitetura do Sistema (Fluxo de Dados)
@@ -578,8 +559,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#4-fluxos-criticos-do-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       4. Fluxos Críticos do Sistema
@@ -604,11 +585,6 @@
       4.2. Fluxo de Autenticação (Login)
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -828,25 +804,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#arquitetura-do-sistema-e-modelagem" class="md-nav__link">
-    <span class="md-ellipsis">
-      📐 Arquitetura do Sistema e Modelagem
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📐 Arquitetura do Sistema e Modelagem">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-estrutura-do-projeto-diretorios-e-arquivos" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Estrutura do Projeto (Diretórios e Arquivos)
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#2-modelos-de-dados-erd-simplificado" class="md-nav__link">
     <span class="md-ellipsis">
       2. Modelos de Dados (ERD Simplificado)
@@ -854,8 +811,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#3-arquitetura-do-sistema-fluxo-de-dados" class="md-nav__link">
     <span class="md-ellipsis">
       3. Arquitetura do Sistema (Fluxo de Dados)
@@ -863,8 +820,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#4-fluxos-criticos-do-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       4. Fluxos Críticos do Sistema
@@ -896,11 +853,6 @@
     </nav>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
     </ul>
   
@@ -921,13 +873,18 @@
   
 
 
+  <h1>Visão Geral</h1>
+
 <h3 id="3-docsarchitecturemd-arquitetura-modelagem-e-endpoints">3. <code>docs/architecture.md</code> (Arquitetura, Modelagem e Endpoints)</h3>
 <p>Este arquivo detalha a <strong>Estrutura</strong>, <strong>Modelagem de Dados</strong>, <strong>Arquitetura</strong> e <strong>Endpoints API</strong>.</p>
-<p>```markdown</p>
-<h1 id="arquitetura-do-sistema-e-modelagem">📐 Arquitetura do Sistema e Modelagem</h1>
-<h2 id="1-estrutura-do-projeto-diretorios-e-arquivos">1. Estrutura do Projeto (Diretórios e Arquivos)</h2>
-<p>A estrutura segue o padrão Django, com a aplicação principal (<code>agendamentos</code>) isolada e focada em Domain-Driven Design (DDD), separando a lógica de negócio na camada de serviços.</p>
-<p>agendamento/
+<div class="highlight"><pre><span></span><code><span class="gh"># 📐 Arquitetura do Sistema e Modelagem</span>
+
+<span class="gu">## 1. Estrutura do Projeto (Diretórios e Arquivos)</span>
+
+A estrutura segue o padrão Django, com a aplicação principal (<span class="sb">`agendamentos`</span>) isolada e focada em Domain-Driven Design (DDD), separando a lógica de negócio na camada de serviços.
+
+```text
+agendamento/
 ├── agendamento/        # Configuração do Projeto Django (settings, urls)
 │   ├── settings.py     # Configurações com python-decouple e settings de produção/Docker.
 │   └── urls.py         # URLs principais
@@ -942,7 +899,8 @@
 ├── venv/
 ├── Dockerfile          # Instruções de Build do Container.
 ├── docker-compose.yml  # Configuração local (Django + PostgreSQL).
-└── requirements.txt</p>
+└── requirements.txt
+</code></pre></div>
 <h2 id="2-modelos-de-dados-erd-simplificado">2. Modelos de Dados (ERD Simplificado)</h2>
 <p>O diagrama abaixo representa as relações críticas para o sistema de agendamento.</p>
 <p>```mermaid
@@ -984,10 +942,11 @@ AGENDAMENTO {
     decimal valor_total
     varchar endereco
 }
+```
 </code></pre></div>
 <h2 id="3-arquitetura-do-sistema-fluxo-de-dados">3. Arquitetura do Sistema (Fluxo de Dados)</h2>
 <p>O diagrama ilustra a separação de responsabilidades (SoC) com a Camada de Serviços isolada.
-```bash
+```mermaid
 graph TD
     A[Usuário/Cliente] --&gt; B(Requisição HTTP);
     B --&gt; C{Django: URLs};
@@ -1008,7 +967,7 @@ end
 </code></pre></div>
 <h2 id="4-fluxos-criticos-do-sistema">4. Fluxos Críticos do Sistema</h2>
 <h3 id="41-fluxo-de-agendamento-crud">4.1. Fluxo de Agendamento (CRUD)</h3>
-<p><code>bash
+<p><code>mermaid
 flowchart TD
     A[Início: Formulário de Agendamento] --&gt; B{POST: views.agendar_servico};
     B --&gt; C[Forms.py: Validação de Dados];
@@ -1020,7 +979,7 @@ flowchart TD
     H --&gt; I[Redirecionar para Meus Agendamentos]
     E --&gt; B;</code></p>
 <h3 id="42-fluxo-de-autenticacao-login">4.2. Fluxo de Autenticação (Login)</h3>
-<p><code>bash
+<p><code>mermaid
 flowchart TD
     A[Tela de Login] --&gt; B{POST: forms.CustomAuthenticationForm};
     B -- Credenciais --&gt; C[Django Auth Backend];
