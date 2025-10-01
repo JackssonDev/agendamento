@@ -22,10 +22,18 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 # Permite o acesso do Render
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
 
-# Redireciona todo tráfego para HTTPS (obrigatório em produção)
-SECURE_SSL_REDIRECT = True
 
-# Application definition
+# === NOVAS CONFIGURAÇÕES DE SEGURANÇA PARA HTTPS (DEBUG=False) ===
+
+SECURE_SSL_REDIRECT = True 
+SECURE_HSTS_SECONDS = 31536000 
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True 
+CSRF_COOKIE_SECURE = True 
+SESSION_COOKIE_SECURE = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+
 
 INSTALLED_APPS = [
     'jazzmin', 
