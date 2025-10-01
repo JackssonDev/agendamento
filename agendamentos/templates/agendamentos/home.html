@@ -22,39 +22,40 @@
 
     <div class="row mb-5">
         <div class="col-12">
-            <h2 class="text-center mb-4" style="color: #9E7B8A;">
+            <h2 class="text-center mb-5" style="color: #9E7B8A;">
                 <i class="fas fa-cart-shopping me-2"></i>Nossos Serviços
             </h2>
         </div>
         
         {% for servico in servicos %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm d-flex flex-column"> 
-                
-                <div class="card-body text-center flex-grow-0">
-                    <div class="service-icon mb-3" style="font-size: 3rem;">
-                        <i class="{{ servico.icone }}"></i>
-                    </div>
-                    <h5 class="card-title">{{ servico.nome }}</h5>
-                    <h6 class="text-custom">R$ {{ servico.preco }}</h6>
-                    
-                    {% if not servico.imagem and servico.descricao %}
-                    <p class="card-text text-muted small mt-2">{{ servico.descricao }}</p>
-                    {% endif %}
-                </div>
-                
-                {% if servico.imagem %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4"> <div class="card h-100 shadow-lg border-0"> {% if servico.imagem %}
                 <img src="{{ servico.imagem.url }}" 
-                     class="card-img-bottom" 
+                     class="card-img-top rounded-top" 
                      alt="Foto do Serviço {{ servico.nome }}" 
                      style="height: 180px; object-fit: cover;">
                 {% endif %}
                 
+                <div class="card-body text-center d-flex flex-column">
+                    
+                    {% if not servico.imagem %}
+                    <div class="service-icon mb-3 mx-auto" style="font-size: 4rem; width: fit-content;"> 
+                        <i class="{{ servico.icone }}"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title fw-bold mt-2">{{ servico.nome }}</h5>
+                    <p class="text-custom fs-4 mb-3">R$ {{ servico.preco }}</p>
+                    
+                    <p class="card-text text-muted small flex-grow-1">{{ servico.descricao|default:"Serviço de alta qualidade para o bem-estar do seu pet." }}</p>
+                    
+                    <a href="{% url 'agendar_servico' %}" class="btn btn-custom mt-2">
+                        Agendar
+                    </a>
                 </div>
+            </div>
         </div>
         {% endfor %}
     </div>
-
     <div class="row">
         <div class="col-12">
             <div class="card bg-light">
