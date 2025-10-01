@@ -22,26 +22,21 @@ theme:
 # ----------------------------------------------------
 plugins:
   - search
-  - mermaid2
-  # Remova 'privacy' se não for usar.
+  - mermaid2 # Garante que o JavaScript para diagramas seja injetado
 
 markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences:
-      # 🚨 CORREÇÃO: Usa 'custom_fences' para carregar corretamente o Mermaid e Diagramas
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-
   - admonition
   - attr_list
   - md_in_html
   - tables
   - pymdownx.details
   - pymdownx.extra
-  # ⚠️ LINHA REMOVIDA: A linha original '- pymdownx.mermaid' causava o erro
-  # ----------------------------------------------------
 
 # ----------------------------------------------------
 # 3. Estrutura de Navegação (Nav)
@@ -52,9 +47,9 @@ nav:
   - Setup e Instalação: setup.md
   - Arquitetura:
       - Visão Geral: architecture.md
-      - APIs e Endpoints: architecture.md#4-endpoints-e-potencial-de-api
+      - APIs e Endpoints: architecture.md#endpoints-e-potencial-de-api
   - Modelagem do Sistema:
-      - Modelos de Dados (ERD): architecture.md#2-modelos-de-dados-erd-simplificado
-      - Fluxos Críticos: architecture.md#4-fluxos-críticos-do-sistema
+      - Modelos de Dados (ERD): architecture.md#modelos-de-dados-erd-simplificado
+      - Fluxos Críticos: architecture.md#fluxos-criticos-do-sistema
   - Qualidade e Padrões: guidelines.md
   - Segurança: security.md

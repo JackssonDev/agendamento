@@ -1,7 +1,3 @@
-### 3. Arquitetura, Modelagem e Endpoints
-Este arquivo detalha a **Estrutura**, **Modelagem de Dados**, **Arquitetura** e **Endpoints API**.
-
-```markdown
 # 📐 Arquitetura do Sistema e Modelagem
 
 ## 1. Estrutura do Projeto (Diretórios e Arquivos)
@@ -25,12 +21,10 @@ agendamento/
 ├── Dockerfile          # Instruções de Build do Container.
 ├── docker-compose.yml  # Configuração local (Django + PostgreSQL).
 └── requirements.txt
-```
+
 
 ## 2. Modelos de Dados (ERD Simplificado)
-
 O diagrama abaixo representa as relações críticas para o sistema de agendamento.
-
 ```mermaid
 erDiagram
     USUARIO ||--o{ PERFIL_USUARIO : "tem um"
@@ -71,10 +65,10 @@ erDiagram
         decimal valor_total
         varchar endereco
     }
-    ```
+    
     
 ## 3. Arquitetura do Sistema (Fluxo de Dados)
-O diagrama ilustra a separação de responsabilidades (SoC) com a Camada de Serviços isolada.
+O diagrama ilustra a separação de responsabilidades (SoC) com a Camada de Serviços isolada. 
 ```mermaid
 graph TD
     A[Usuário/Cliente] --> B(Requisição HTTP);
@@ -93,10 +87,9 @@ graph TD
         E
         F
     end
-    ```
+    
     
 ## 4. Fluxos Críticos do Sistema
-
 ### 4.1. Fluxo de Agendamento (CRUD)
 ```mermaid
 flowchart TD
@@ -109,9 +102,8 @@ flowchart TD
     G --> H[Views: messages.success('Agendado')]
     H --> I[Redirecionar para Meus Agendamentos]
     E --> B;
-    ```
     
-### 4.2. Fluxo de Autenticação (Login)
+## 4.2. Fluxo de Autenticação (Login)
 ```mermaid
 flowchart TD
     A[Tela de Login] --> B{POST: forms.CustomAuthenticationForm};
@@ -120,5 +112,3 @@ flowchart TD
     D --> A;
     C -- Sucesso --> E[Views: login(user)];
     E --> F[Redirecionamento Pós-Login];
-    ```
-    
