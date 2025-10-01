@@ -1,0 +1,34 @@
+# .github/workflows/ci.yml
+
+name: Deploy Documentação com MkDocs
+
+on:
+  # Aciona o workflow em todo push para a branch 'main'
+  push:
+    branches:
+      - main
+    # Opcional: só aciona se houver mudanças na documentação
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+  # Permite rodar o workflow manualmente
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.x # Usa a versão mais recente disponível
+
+      - name: Instalar MkDocs e Dependências
+        run: pip install mkdocs mkdocs-material
+
+      - name: Deploy no GitHub Pages
+        run: mkdocs gh-deploy --force
+        # O '--force' garante que o deploy funcione mesmo sem o branch 'gh-pages' existir
