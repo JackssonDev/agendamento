@@ -1,6 +1,4 @@
-
-### 3. `docs/architecture.md` (Arquitetura, Modelagem e Endpoints)
-
+### 3. Arquitetura, Modelagem e Endpoints
 Este arquivo detalha a **Estrutura**, **Modelagem de Dados**, **Arquitetura** e **Endpoints API**.
 
 ```markdown
