@@ -26,11 +26,11 @@ O projeto foi construído sobre uma arquitetura moderna e escalável:
 
 | Categoria | Tecnologia |
 | :--- | :--- |
-| **Backend** | Python 3.10+, Django 5.x |
-| **Banco de Dados** | PostgreSQL (Padrão de produção), SQLite3 (Desenvolvimento) |
-| **Frontend** | HTML5, CSS3 (Bootstrap 5), JavaScript (jQuery e Vanilla JS) |
-| **Deployment** | Render (PaaS), Gunicorn, WhiteNoise |
-| **Ambiente** | Virtualenv, `python-decouple` |
+| **Backend** | Python 3.10+, **Django 5.x** |
+| **Banco de Dados** | **PostgreSQL** (Produção), **SQLite3** (Desenvolvimento) |
+| **Frontend** | HTML5, CSS3 (**Bootstrap 5**), JavaScript (jQuery e Vanilla JS) |
+| **Deployment** | **Render** (PaaS), Gunicorn, WhiteNoise |
+| **Ferramentas** | Virtualenv, `python-decouple`, **Testes de Unidade** |
 
 ---
 
@@ -96,11 +96,10 @@ Este projeto está configurado para deploy contínuo na plataforma Render, utili
 
 ## 🤝 Autor
 
-**Jackson Pereira Ribeiro**  
-Student/Web Developer  
+**Jackson Pereira Ribeiro**  Student/Web Developer  
 📧 LinkedIn: [Jackson Pereira Ribeiro](https://br.linkedin.com/in/jackson-ribeiro-625029216)  
 🐙 GitHub: [@JackssonDev](https://github.com/JackssonDev)
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT.
+Este projeto está sob a [**Licença MIT**](https://opensource.org/licenses/MIT).
