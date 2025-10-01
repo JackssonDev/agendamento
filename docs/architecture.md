@@ -10,6 +10,7 @@ Este arquivo detalha a **Estrutura**, **Modelagem de Dados**, **Arquitetura** e 
 
 A estrutura segue o padrão Django, com a aplicação principal (`agendamentos`) isolada e focada em Domain-Driven Design (DDD), separando a lógica de negócio na camada de serviços.
 
+```text
 agendamento/
 ├── agendamento/        # Configuração do Projeto Django (settings, urls)
 │   ├── settings.py     # Configurações com python-decouple e settings de produção/Docker.
@@ -26,6 +27,7 @@ agendamento/
 ├── Dockerfile          # Instruções de Build do Container.
 ├── docker-compose.yml  # Configuração local (Django + PostgreSQL).
 └── requirements.txt
+```
 
 ## 2. Modelos de Dados (ERD Simplificado)
 
@@ -71,10 +73,11 @@ erDiagram
         decimal valor_total
         varchar endereco
     }
+    ```
     
 ## 3. Arquitetura do Sistema (Fluxo de Dados)
 O diagrama ilustra a separação de responsabilidades (SoC) com a Camada de Serviços isolada.
-```bash
+```mermaid
 graph TD
     A[Usuário/Cliente] --> B(Requisição HTTP);
     B --> C{Django: URLs};
@@ -97,7 +100,7 @@ graph TD
 ## 4. Fluxos Críticos do Sistema
 
 ### 4.1. Fluxo de Agendamento (CRUD)
-```bash
+```mermaid
 flowchart TD
     A[Início: Formulário de Agendamento] --> B{POST: views.agendar_servico};
     B --> C[Forms.py: Validação de Dados];
@@ -111,7 +114,7 @@ flowchart TD
     ```
     
 ### 4.2. Fluxo de Autenticação (Login)
-```bash
+```mermaid
 flowchart TD
     A[Tela de Login] --> B{POST: forms.CustomAuthenticationForm};
     B -- Credenciais --> C[Django Auth Backend];

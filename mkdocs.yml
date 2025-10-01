@@ -1,7 +1,5 @@
-# mkdocs.yml (Na raiz do projeto)
-
 site_name: PetCare Agendamento - Documentação Técnica
-site_url: https://jackssondev.github.io/agendamento/  # Ajuste para seu link de deploy (GitHub Pages)
+site_url: https://jackssondev.github.io/agendamento/
 site_description: Documentação de arquitetura, segurança e desenvolvimento para a aplicação PetCare.
 repo_url: https://github.com/JackssonDev/agendamento
 
@@ -11,32 +9,38 @@ repo_url: https://github.com/JackssonDev/agendamento
 theme:
   name: 'material'
   palette:
-    # Cores personalizadas para dar um toque profissional
     primary: 'blue grey'
     accent: 'deep orange'
   features:
     - navigation.tabs
-    - content.code.annotate # Para blocos de código
-    - toc.follow # Sumário lateral que acompanha a rolagem
+    - content.code.annotate
+    - toc.follow
     - content.tabs
 
 # ----------------------------------------------------
 # 2. Plugins e Extensões
 # ----------------------------------------------------
 plugins:
-  - search # Adiciona a funcionalidade de busca
-  - privacy # Se for usar plugins
+  - search
+  # Remova 'privacy' se não for usar.
 
 markdown_extensions:
-  - pymdownx.highlight # Melhor highlight de código
-  - pymdownx.superfences # Blocos de código aninhados
-  - admonition # Blocos de nota/aviso
-  - attr_list # Para customizar blocos
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      # 🚨 CORREÇÃO: Usa 'custom_fences' para carregar corretamente o Mermaid e Diagramas
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  - admonition
+  - attr_list
   - md_in_html
   - tables
-  - pymdownx.details # Para blocos de detalhes expansíveis
-  - pymdownx.extra # Extensões extras
-  - pymdownx.mermaid # 🚨 Suporte ao Mermaid (Diagramas ERD e Fluxo)
+  - pymdownx.details
+  - pymdownx.extra
+  # ⚠️ LINHA REMOVIDA: A linha original '- pymdownx.mermaid' causava o erro
+  # ----------------------------------------------------
 
 # ----------------------------------------------------
 # 3. Estrutura de Navegação (Nav)
