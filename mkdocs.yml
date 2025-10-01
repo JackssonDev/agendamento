@@ -1,0 +1,55 @@
+# mkdocs.yml (Na raiz do projeto)
+
+site_name: PetCare Agendamento - Documentação Técnica
+site_url: https://jackssondev.github.io/agendamento/  # Ajuste para seu link de deploy (GitHub Pages)
+site_description: Documentação de arquitetura, segurança e desenvolvimento para a aplicação PetCare.
+repo_url: https://github.com/JackssonDev/agendamento
+
+# ----------------------------------------------------
+# 1. Configuração do Tema (Material for MkDocs)
+# ----------------------------------------------------
+theme:
+  name: 'material'
+  palette:
+    # Cores personalizadas para dar um toque profissional
+    primary: 'blue grey'
+    accent: 'deep orange'
+  features:
+    - navigation.tabs
+    - content.code.annotate # Para blocos de código
+    - toc.follow # Sumário lateral que acompanha a rolagem
+    - content.tabs
+
+# ----------------------------------------------------
+# 2. Plugins e Extensões
+# ----------------------------------------------------
+plugins:
+  - search # Adiciona a funcionalidade de busca
+  - privacy # Se for usar plugins
+
+markdown_extensions:
+  - pymdownx.highlight # Melhor highlight de código
+  - pymdownx.superfences # Blocos de código aninhados
+  - admonition # Blocos de nota/aviso
+  - attr_list # Para customizar blocos
+  - md_in_html
+  - tables
+  - pymdownx.details # Para blocos de detalhes expansíveis
+  - pymdownx.extra # Extensões extras
+  - pymdownx.mermaid # 🚨 Suporte ao Mermaid (Diagramas ERD e Fluxo)
+
+# ----------------------------------------------------
+# 3. Estrutura de Navegação (Nav)
+# ----------------------------------------------------
+nav:
+  - Home: index.md
+  - Introdução: index.md
+  - Setup e Instalação: setup.md
+  - Arquitetura:
+      - Visão Geral: architecture.md
+      - APIs e Endpoints: architecture.md#4-endpoints-e-potencial-de-api
+  - Modelagem do Sistema:
+      - Modelos de Dados (ERD): architecture.md#2-modelos-de-dados-erd-simplificado
+      - Fluxos Críticos: architecture.md#4-fluxos-críticos-do-sistema
+  - Qualidade e Padrões: guidelines.md
+  - Segurança: security.md
