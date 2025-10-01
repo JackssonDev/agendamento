@@ -1,0 +1,23 @@
+# .dockerignore
+
+# Ignorar o ambiente virtual
+venv/
+*.pyc
+__pycache__/
+
+# Ignorar o Git
+.git
+.gitignore
+
+# Ignorar arquivos sensíveis
+.env
+
+# Ignorar o banco de dados local
+db.sqlite3
+
+# Ignorar diretórios de mídia (se grandes)
+# Se você tiver muitas imagens, é melhor montá-las como volume (ver docker-compose)
+# media/
+
+# Ignorar arquivos compilados do Django
+staticfiles/

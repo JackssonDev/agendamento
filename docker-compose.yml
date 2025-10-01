@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. Serviço do Banco de Dados PostgreSQL
+  db:
+    image: postgres:14-alpine
+    container_name: petcare_db
+    # Mapeia volumes para persistência de dados (os dados sobrevivem ao restart do container)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: petcare_agendamento
+      POSTGRES_USER: petcare_user
+      POSTGRES_PASSWORD: petcare_password
+    ports:
+      - "5432:5432"
+
+  # 2. Serviço da Aplicação Django
+  web:
+    build: .  # Usa o Dockerfile no diretório atual
+    container_name: petcare_web
+    command: python manage.py runserver 0.0.0.0:8000 # Comando para desenvolvimento
+    volumes:
+      - .:/app  # Monta o código localmente para que as alterações sejam refletidas
+      - media_data:/app/media # Volume para persistir arquivos de mídia (uploads)
+    ports:
+      - "8000:8000"
+    environment:
+      # Configurações de ambiente local - Você deve garantir que seu .env local use esses mesmos valores!
+      DEBUG: 'True'
+      SECRET_KEY: 'sua_secret_key_aqui'
+      # Configuração para conectar ao container 'db'
+      DATABASE_URL: postgres://petcare_user:petcare_password@db:5432/petcare_agendamento
+      ALLOWED_HOSTS: '127.0.0.1,localhost'
+    depends_on:
+      - db # Garante que o banco de dados inicie primeiro
+
+# Volumes para persistência de dados
+volumes:
+  postgres_data:
+  media_data:
