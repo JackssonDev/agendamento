@@ -202,3 +202,17 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+ 
+# CONFIGURAÇÃO DE MENSAGENS (Mapeamento Django -> Bootstrap)
+
+from django.contrib.messages import constants as message_constants
+
+# Mapeia a tag de erro do Django (error) para a tag de perigo do Bootstrap (danger)
+MESSAGE_TAGS = {
+    message_constants.DEBUG: 'secondary',
+    message_constants.INFO: 'info',
+    message_constants.SUCCESS: 'success',
+    message_constants.WARNING: 'warning',
+    message_constants.ERROR: 'danger', # Garante que messages.error() use alert-danger
+}
