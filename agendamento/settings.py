@@ -4,7 +4,9 @@ Django settings for agendamento project.
 
 from pathlib import Path
 import os
-import dj_database_url # Para configurar o PostgreSQL do Render
+import dj_database_url
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,14 +15,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # VARIÁVEIS DE AMBIENTE E SEGURANÇA (PRODUÇÃO)
 # =================================================================
 
-# Carrega a chave do Render. Se não encontrar (local), usa a chave local.
-SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_secret_key_aqui_para_uso_local_apenas') 
+SECRET_KEY = config('SECRET_KEY', default='sua_secret_key_aqui_para_uso_local_apenas') 
 
-# DEBUG será False no Render e True se a variável de ambiente DEBUG for 'True'.
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# Converte o valor para booleanos (True ou False).
+DEBUG = config('DEBUG', default=False, cast=bool) 
 
 # Permite o acesso do Render
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
+# Usamos config e definimos o cast para list, que divide os hosts por vírgula.
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=lambda v: [s.strip() for s in v.split(',')])
 
 
 # === NOVAS CONFIGURAÇÕES DE SEGURANÇA PARA HTTPS (DEBUG=False) ===
