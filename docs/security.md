@@ -42,5 +42,3 @@ flowchart LR
         C --> D[Chaves como SECRET_KEY];
     end
     D --> E[Execução da Aplicação];
-```
-
