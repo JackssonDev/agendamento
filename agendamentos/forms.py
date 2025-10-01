@@ -40,6 +40,12 @@ class CustomAuthenticationForm(AuthenticationForm):
         self.fields['password'].widget.attrs.update({'placeholder': 'Sua senha', 'autocomplete': 'current-password'})
         self.fields['username'].help_text = None
         self.fields['password'].help_text = None
+        self.error_messages['invalid_login'] = (
+            'Usuário ou senha inválido. Por favor, tente novamente!'
+        )
+        self.error_messages['inactive'] = (
+            'Esta conta está inativa. Entre em contato com o suporte.'
+        )
 
 class PetForm(forms.ModelForm):
     class Meta:

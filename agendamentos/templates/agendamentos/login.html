@@ -11,6 +11,13 @@
         <form method="post">
             {% csrf_token %}
 
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert" style="border-radius: 10px;">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
             {% for field in form %}
             <div class="mb-3">
                 <label for="{{ field.id_for_label }}" class="form-label visually-hidden">{{ field.label }}</label>
@@ -50,14 +57,18 @@
     // Script para alternar visibilidade da senha
     document.addEventListener('DOMContentLoaded', function() {
         const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('id_password');
+        // O id padrão do Django é id_password
+        const passwordInput = document.getElementById('id_password'); 
 
         if (togglePassword && passwordInput) {
             togglePassword.addEventListener('click', function (e) {
                 const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordInput.setAttribute('type', type);
-                this.querySelector('i').classList.toggle('fa-eye');
-                this.querySelector('i').classList.toggle('fa-eye-slash');
+                
+                // Alterna os ícones de olho aberto/fechado
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
             });
         }
     });
